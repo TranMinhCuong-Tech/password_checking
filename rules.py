@@ -1,0 +1,54 @@
+try:
+    from .algorithms import Brute_Force as brute_force
+    from .algorithms import Greedy as greedy
+    from .algorithms import Math_Model as math_model
+    from .algorithms import Dynamic_Programming as dynamic_programming
+except ImportError:
+    import algorithms.Brute_Force as brute_force
+    import algorithms.Greedy as greedy
+    import algorithms.Math_Model as math_model
+    import algorithms.Dynamic_Programming as dynamic_programming
+
+
+def printMenuRoles():
+    menu = """
+    [1] First character is uppercase
+    [2] All characters are uppercase
+    [3] All characters are lowercase
+    [4] Last character is a digit
+    [5] Last character is a special symbol
+    [6] First character is a special symbol
+    [7] Standard Password
+    [0] Back
+    """
+    print(menu)
+
+
+def checkPassword(algorithm_module):
+    """
+    Hiển thị menu rule và gọi check_password(choice) của algorithm_module.
+    algorithm_module: một trong brute_force / greedy / math_model / dynamic_programming
+    """
+    # Load passwords một lần, tái dụng cho mọi lần gọi trong session này
+    passwords = algorithm_module.load_passwords()
+    if not passwords:
+        print("[!] No passwords loaded. Returning...")
+        return
+
+    while True:
+        try:
+            printMenuRoles()
+            choice = int(input("[+] Enter your choice: "))
+
+            if choice == 0:
+                print("[*] Returning to previous menu...\n")
+                break
+
+            if 1 <= choice <= 7:
+                print("[*] Checking...\n")
+                algorithm_module.check_password(choice, passwords)
+            else:
+                print("[!] Invalid choice!")
+
+        except ValueError:
+            print("[!] Please enter a valid number!\n")
