@@ -1,0 +1,3 @@
+.env/
+__pycache__/
+password_checking/algorithms/__pycache__/
