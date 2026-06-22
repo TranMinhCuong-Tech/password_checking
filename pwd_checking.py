@@ -13,55 +13,58 @@ except ImportError:
 
 
 def printMenuAlgorithms():
-    # Menu cấp 1: cho người dùng chọn thuật toán muốn benchmark.
+    """
+    In menu cap 1.
+    Nguoi dung se chon 1 trong 4 cach giai maximum coverage.
+    """
     menu = """
-    [1] Brute Force
-    [2] Greedy
-    [3] Math Model
-    [4] Dynamic Programming
+    [1] Brute Force (exact NP-hard search)
+    [2] Greedy (approximation)
+    [3] Math Model (bitmask exact)
+    [4] Dynamic Programming (memoized exact)
     [0] Exit
     """
     print(menu)
 
 
 def runAlgorithms():
-    # Vòng lặp chính của chương trình, chạy cho tới khi người dùng chọn thoát.
+    """Vong lap giao dien chinh cua chuong trinh."""
     while True:
         try:
             printMenuAlgorithms()
             choice = int(input("\n[+] Enter your choice: "))
 
             if choice == 1:
-                # Chạy thuật toán Brute Force.
-                print("[*] Running Brute Force...\n")
+                # Exact search: duyet to hop rule.
+                print("[*] Running Brute Force maximum coverage...\n")
                 rules.checkPassword(brute_force)
 
             elif choice == 2:
-                # Chạy thuật toán Greedy.
-                print("[*] Running Greedy...\n")
+                # Thuat toan tham lam.
+                print("[*] Running Greedy maximum coverage...\n")
                 rules.checkPassword(greedy)
 
             elif choice == 3:
-                # Chạy thuật toán Math Model.
-                print("[*] Running Math Model...\n")
+                # Bitmask exact search.
+                print("[*] Running Math Model maximum coverage...\n")
                 rules.checkPassword(math_model)
 
             elif choice == 4:
-                # Chạy thuật toán Dynamic Programming.
-                print("[*] Running Dynamic Programming...\n")
+                # Memoized exact search.
+                print("[*] Running Dynamic Programming maximum coverage...\n")
                 rules.checkPassword(dynamic_programming)
 
             elif choice == 0:
-                # Thoát khỏi chương trình.
+                # Thoat chuong trinh.
                 print("[*] Exiting...\n")
                 break
 
             else:
-                # Người dùng nhập giá trị không hợp lệ.
+                # Lua chon khong hop le.
                 print("[!] Invalid choice!")
 
         except ValueError:
-            # Bắt lỗi khi người dùng nhập không phải số.
+            # Bat truong hop nguoi dung nhap khong phai so.
             print("[!] Please enter a valid number!")
 
 

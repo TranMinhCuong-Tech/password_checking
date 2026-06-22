@@ -1,60 +1,65 @@
 try:
-    from .algorithms import Brute_Force as brute_force
-    from .algorithms import Greedy as greedy
-    from .algorithms import Math_Model as math_model
-    from .algorithms import Dynamic_Programming as dynamic_programming
+    from .coverage_problem import RULES
 except ImportError:
-    import algorithms.Brute_Force as brute_force
-    import algorithms.Greedy as greedy
-    import algorithms.Math_Model as math_model
-    import algorithms.Dynamic_Programming as dynamic_programming
+    from coverage_problem import RULES
 
 
-def printMenuRoles():
-    # Menu cấp 2: cho người dùng chọn rule cần kiểm tra.
+def printRuleCatalog():
+    """
+    In danh sach rule ung vien.
+    Day la tap cac set co the duoc chon trong bai toan maximum coverage.
+    """
     menu = """
+    Candidate rules:
     [1] First character is uppercase
     [2] All characters are uppercase
     [3] All characters are lowercase
     [4] Last character is a digit
     [5] Last character is a special symbol
     [6] First character is a special symbol
-    [7] Standard Password
-    [0] Back
+    [7] Standard password
+    [0] Return to previous menu
     """
     print(menu)
 
 
+def _prompt_k():
+    """Nhap so rule can chon va kiem tra hop le."""
+    while True:
+        try:
+            k = int(input(f"[+] Enter your choice: "))
+            if 0 <= k <= len(RULES):
+                return k
+            print(f"[!] Please enter a number between 0 and {len(RULES)}.")
+        except ValueError:
+            print("[!] Please enter a valid number!")
+
+
 def checkPassword(algorithm_module):
     """
-    Hiển thị menu rule và gọi check_password(choice) của module thuật toán.
-    algorithm_module: một trong brute_force / greedy / math_model / dynamic_programming.
+    Chon k rule va goi solver.
+    Ket qua in ra chi gom cac rule da chon va cac password duoc phu.
+    Nguoi dung co the nhap lai k neu muon chay tiep.
     """
-    # Đọc file passwords.txt một lần, rồi tái sử dụng cho mọi lần chọn rule trong phiên này.
-    passwords = algorithm_module.load_passwords()
+    try:
+        passwords = algorithm_module.load_passwords()
+    except AttributeError:
+        passwords = []
+
     if not passwords:
         print("[!] No passwords loaded. Returning...")
         return
 
-    # Cho phép người dùng đổi rule nhiều lần mà không phải quay lại menu chính.
     while True:
-        try:
-            printMenuRoles()
-            choice = int(input("[+] Enter your choice: "))
+        printRuleCatalog()
+        print(f"[+] Total candidate rules: {len(RULES)}")
+        k = _prompt_k()
 
-            if choice == 0:
-                # Quay về menu trước.
-                print("[*] Returning to previous menu...\n")
-                break
+        if k == 0:
+            # Quay lai menu truoc neu nguoi dung chon 0.
+            print("[*] Returning to previous menu...\n")
+            break
 
-            if 1 <= choice <= 7:
-                # Gọi hàm check_password của module thuật toán đã chọn.
-                print("[*] Checking...\n")
-                algorithm_module.check_password(choice, passwords)
-            else:
-                # Giá trị nằm ngoài phạm vi menu.
-                print("[!] Invalid choice!")
-
-        except ValueError:
-            # Bắt lỗi khi nhập không phải số.
-            print("[!] Please enter a valid number!\n")
+        # Goi solver theo thuat toan da chon.
+        print("[*] Solving maximum coverage...\n")
+        algorithm_module.solve_max_coverage(k, passwords)

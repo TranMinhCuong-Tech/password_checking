@@ -1,5 +1,5 @@
 def showBanner():
-    # Hàm này chỉ dùng để in banner ASCII và phần mô tả ngắn cho chương trình.
+    """In gioi thieu ngan ve bai toan maximum coverage."""
     banner = """
             ██████▄ ▄█████▄ ▄█████▄ ▄█████▄ ██ ██ ██ ▄█████▄ ██████▄ ██████▄
             ██▄▄▄██ ██▄▄▄██ ██▄▄▄▄  ██▄▄▄▄  ██ ██ ██ ██   ██ ██   ██ ██   ██
@@ -14,22 +14,21 @@ def showBanner():
     print(banner)
 
     description = """
-    The group project involves analyzing and implementing algorithms for rule-based password checking,
-    with a focus on execution time, solution quality, and space complexity.
+    Each rule represents a subset of passwords that satisfy a specific condition. 
+    Given a collection of rules and a password dataset, 
+        the objective is to select at most k rules such that 
+        the total number of covered passwords is maximized.
     """
     print(description)
 
-# Gọi banner ngay khi file được nạp, để người dùng thấy giao diện giới thiệu trước.
+
 showBanner()
 
 try:
-    # Import theo kiểu package, phù hợp khi chạy dự án như một module.
     from . import pwd_checking
 except ImportError:
-    # Fallback khi chạy file trực tiếp trong thư mục hiện tại.
     import pwd_checking
 
 
 if __name__ == "__main__":
-    # Nếu đây là file được chạy trực tiếp, mở menu chính của chương trình.
     pwd_checking.runAlgorithms()

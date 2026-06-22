@@ -1,287 +1,208 @@
-# PASSWORD_CHECKING
-
 <p align="center">
-    <img src="image.png" alt="Password Checking" width="700">
+  <img src="banner.png" alt="Password Checking" width="700">
 </p>
 
-A password strength evaluation project that analyzes passwords using multiple algorithms and approaches, including:
+# Password Checking Maximum Coverage
 
-* Brute Force
-* Dynamic Programming
-* Greedy Algorithm
-* Mathematical Model
+## Table of Contents
 
----
+- [Overview](#overview)
+- [Key Idea](#key-idea)
+- [Project Features](#project-features)
+- [How It Works](#how-it-works)
+- [Algorithms](#algorithms)
+- [Project Structure](#project-structure)
+- [Output Files](#output-files)
+- [Run the Program](#run-the-program)
+- [Full Theory Description](#full-theory-description)
 
-# Table of Contents
+## Overview
 
-* [Overview](#overview)
-* [Requirements](#requirements)
-* [Installation](#installation)
+`password_checking_maximum_coverage` is a small academic project that models password-rule selection as the **Maximum Coverage** problem.
 
-  * [Install Python](#install-python)
-  * [Create a Virtual Environment](#create-a-virtual-environment)
-  * [Activate the Virtual Environment](#activate-the-virtual-environment)
-  * [Install Dependencies](#install-dependencies)
-* [Project Structure](#project-structure)
-* [Running the Project](#running-the-project)
-* [Modules Description](#modules-description)
-* [Example Usage](#example-usage)
+Instead of checking a single password against a single rule, the project treats:
 
----
+- the full list of passwords in `passwords.txt` as the **universe set**
+- each rule as a **subset** of passwords that satisfy that rule
+- the user-chosen value `k` as the number of subsets to select
 
-# Overview
+The goal is to choose at most `k` rules so that the union of the selected rules covers as many passwords as possible.
 
-This project evaluates password strength using different algorithms and security rules.
+This makes the project a practical demonstration of:
 
-Features:
+- NP and NP-hard problem modeling
+- Maximum Coverage optimization
+- exact search versus approximation
+- bitmask-based set operations
 
-* Password analysis
-* Password strength scoring
-* Multiple algorithm implementations
-* Educational and research purposes
+## Key Idea
 
----
+Let:
 
-# Requirements
+- `U` be the set of all passwords from `passwords.txt`
+- `S_i` be the set of passwords covered by rule `i`
+- `k` be the number of rules to choose
 
-* Python 3.8 or later
-* Windows, Linux, or macOS
-
-Check your Python version:
-
-```bash
-python --version
-```
-
-or
-
-```bash
-python3 --version
-```
-
----
-
-# Installation
-
-## Install Python
-
-### Windows
-
-Download Python from:
-
-https://www.python.org/downloads/
-
-During installation, make sure to enable:
+The optimization target is:
 
 ```text
-Add Python to PATH
+maximize |S_1 ∪ S_2 ∪ ... ∪ S_k|
 ```
 
-Verify installation:
-
-```bash
-python --version
-```
-
-### Linux (Ubuntu/Debian)
-
-```bash
-sudo apt update
-sudo apt install python3 python3-pip python3-venv
-```
-
-### macOS
-
-```bash
-brew install python
-```
-
----
-
-## Create a Virtual Environment
-
-Navigate to the project directory:
-
-```bash
-cd PASSWORD_CHECKING
-```
-
-Create a virtual environment named `env`:
-
-```bash
-python -m venv env
-```
-
-or
-
-```bash
-python3 -m venv env
-```
-
----
-
-## Activate the Virtual Environment
-
-### Windows (Command Prompt)
-
-```cmd
-env\Scripts\activate.bat
-```
-
-### Windows (PowerShell)
-
-```powershell
-.\env\Scripts\Activate.ps1
-```
-
-### Linux
-
-```bash
-source env/bin/activate
-```
-
-### macOS
-
-```bash
-source env/bin/activate
-```
-
-After activation, your terminal should display:
+with the constraint:
 
 ```text
-(env)
+select at most k rules
 ```
 
----
+In simple terms:
 
-## Install Dependencies
+- each rule covers some passwords
+- different rules may overlap
+- the project tries to maximize total coverage while avoiding wasted overlap
 
-If a `requirements.txt` file exists:
+## Project Features
 
-```bash
-pip install -r requirements.txt
-```
+- Reads passwords from `passwords.txt`
+- Defines 7 candidate rules
+- Lets the user choose an algorithm and a value of `k`
+- Solves the Maximum Coverage problem using 4 different strategies
+- Prints selected rules and covered passwords
+- Writes the final result to an output file
 
-To verify installed packages:
+## How It Works
 
-```bash
-pip list
-```
+The workflow is:
 
----
+1. Load all non-empty lines from `passwords.txt`
+2. Convert each rule into a bitmask
+3. Let the user choose an algorithm
+4. Let the user enter `k`
+5. Run the selected solver
+6. Measure time and memory usage
+7. Save the final selected rules and covered passwords
 
-# Project Structure
+The core implementation is in [`coverage_problem.py`](coverage_problem.py), which contains:
+
+- rule predicates
+- password loading
+- bitmask conversion
+- solver execution wrapper
+- result formatting
+
+## Algorithms
+
+The project includes 4 solution methods:
+
+### 1. Brute Force
+
+Tries every possible combination of exactly `k` rules.
+
+- Guarantees the optimal answer
+- Very expensive when the number of rules grows
+
+### 2. Greedy
+
+Chooses the rule that adds the largest number of newly covered passwords at each step.
+
+- Fast and simple
+- Does not guarantee the global optimum
+
+### 3. Math Model
+
+Enumerates every subset of rules using bitmasks and evaluates the coverage exactly.
+
+- Closely matches the mathematical formulation of Maximum Coverage
+- Exact, but still exponential in the number of rules
+
+### 4. Dynamic Programming
+
+Uses recursion with memoization to avoid recomputing repeated states.
+
+- Exact solution method
+- More efficient than naive exhaustive search in repeated subproblems
+
+For a full theoretical explanation of the problem, the NP-hardness background, and a detailed breakdown of every algorithm, see:
+
+- [`description.md`](description.md)
+
+## Candidate Rules
+
+The project currently defines 7 rules:
+
+1. The first character is uppercase
+2. All characters are uppercase
+3. All characters are lowercase
+4. The last character is a digit
+5. The last character is a special symbol
+6. The first character is a special symbol
+7. Standard password
+
+Each rule represents a subset of passwords from the universe set.
+
+## Project Structure
 
 ```text
-PASSWORD_CHECKING/
-│
-├── algorithms/
-│   ├── Brute_Force.py
-│   ├── Dynamic_Programming.py
-│   ├── Greedy.py
-│   └── Math_Model.py
-│
-├── env/
-│
-├── __init__.py
-├── image.png
+.
+├── banner.png
+├── coverage_problem.py
+├── description.md
 ├── passwords.txt
 ├── pwd_checking.py
 ├── README.md
-└── rules.py
+├── rules.py
+├── __init__.py
+└── algorithms
+    ├── Brute_Force.py
+    ├── Dynamic_Programming.py
+    ├── Greedy.py
+    └── Math_Model.py
 ```
 
----
+Notes:
 
-# Modules Description
+- `coverage_problem.py` contains the shared logic and the exact solver implementations
+- `pwd_checking.py` provides the main command-line menu
+- `rules.py` handles rule selection and the `k` prompt
+- each file in `algorithms/` is a small wrapper around one solving strategy
 
-## algorithms/
+## Output Files
 
-Contains all password evaluation algorithms.
+Each solver writes to its own output file:
 
-### Brute_Force.py
+- `output_brute_max_coverage.txt`
+- `output_greedy_max_coverage.txt`
+- `output_math_model_max_coverage.txt`
+- `output_dp_max_coverage.txt`
 
-Implements a brute-force based password analysis approach.
+The output contains only:
 
-### Dynamic_Programming.py
+- the selected rules
+- the covered passwords
 
-Implements password evaluation using dynamic programming techniques.
+It does not include:
 
-### Greedy.py
+- benchmark statistics
+- the full contents of `passwords.txt`
+- passwords that are not covered by the selected rules
 
-Implements a greedy strategy for fast password assessment.
+If no result is available, the program prints `null`.
 
-### Math_Model.py
-
-Uses mathematical formulas and models to estimate password strength.
-
----
-
-## rules.py
-
-Defines password validation and scoring rules, such as:
-
-* Minimum length
-* Uppercase letters
-* Lowercase letters
-* Digits
-* Special characters
-* Additional security constraints
-
----
-
-## passwords.txt
-
-Contains password samples used for testing.
-
----
-
-## **init**.py
-
-Main entry point of the application.
-
-Responsible for:
-
-* Loading passwords
-* Applying evaluation algorithms
-* Generating results
-* Displaying password strength reports
-
----
-
-# Running the Project
-
-Activate the virtual environment first.
-
-Run the main application:
+## Run the Program
 
 ```bash
 python __init__.py
 ```
 
-or
+Then:
 
-```bash
-python3 __init__.py
-```
+1. Choose an algorithm
+2. Enter `k`
+3. View the selected rules and covered passwords
 
----
+## Full Theory Description
 
-# Example Usage
+For the detailed Vietnamese explanation of the theory, project behavior, and algorithm analysis, open:
 
-Example content of `passwords.txt`:
+- [`description.md`](description.md)
 
-```text
-123456
-password
-Admin123
-Admin@123
-P@ssw0rd2025
-```
-
-Run:
-
-```bash
-python __init__.py
-```
