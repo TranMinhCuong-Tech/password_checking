@@ -197,7 +197,7 @@ python __init__.py
 Then:
 
 1. Choose an algorithm
-2. Enter `k`
+2. Enter rule ('k')
 3. View the selected rules and covered passwords
 
 ## Full Theory Description
