@@ -29,6 +29,7 @@ def showBanner():
 
 
 def prompt_k():
+    print("\n[+] Choose a fixed number of rules before selecting an algorithm.")
     while True:
         try:
             k = int(input(f"\n[+] Enter number of rules k (1-{len(rules.RULES)}): "))
@@ -49,6 +50,7 @@ except ImportError:
 
 if __name__ == "__main__":
     showBanner()
+<<<<<<< HEAD
     while True:
         rules.printRuleCatalog()
         selected_k = prompt_k()
@@ -57,3 +59,10 @@ if __name__ == "__main__":
         if user_choice == "0":
             print("[*] Exiting...\n")
             break
+=======
+    rules.printRuleCatalog()
+    selected_k = prompt_k()
+    print(f"\n[+] Fixed number of selected rules: {selected_k}")
+    print("[+] Now choose an algorithm to find the best coverage.")
+    pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+>>>>>>> 13434496e7a9dc624ff952d4c59d945491d27061
