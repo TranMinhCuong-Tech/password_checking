@@ -11,40 +11,66 @@ except ImportError:
 
 def load_passwords(filenames=("real_passwords.txt", "mutated_passwords.txt")):
     """
-    Doc danh sach password tu mot hoac nhieu file dau vao.
+    Doc file password that va file password bien tau.
     Moi dong la mot password. Dong trong se bi bo qua.
     """
     if isinstance(filenames, str):
-        filenames = (filenames,)
+        filenames = (filenames, "mutated_passwords.txt")
 
-    passwords = []
-    for filename in filenames:
+    real_file = filenames[0] if len(filenames) > 0 else "real_passwords.txt"
+    mutated_file = filenames[1] if len(filenames) > 1 else "mutated_passwords.txt"
+
+    data = {"real": [], "mutated": []}
+    for key, filename in (("real", real_file), ("mutated", mutated_file)):
         try:
             with open(filename, "r", encoding="utf-8") as f:
-                passwords.extend(line.strip() for line in f if line.strip())
+                data[key] = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
             print(f"[!] File '{filename}' not found.")
-    return passwords
+    return data
+
+
+def get_universe_passwords(password_data):
+    if isinstance(password_data, dict):
+        return password_data.get("real", [])
+    return password_data
+
+
+def get_mutated_passwords(password_data):
+    if isinstance(password_data, dict):
+        return set(password_data.get("mutated", []))
+    return set(password_data)
+
+
+def normalize_candidates(candidates):
+    if isinstance(candidates, str):
+        return (candidates,)
+    return tuple(candidates)
 
 
 def build_rule_masks(passwords):
     """
     Chuyen moi rule thanh bitmask.
-    Bit i = 1 neu password thu i duoc rule do cover.
+    Bit i = 1 neu password that thu i tao ra it nhat mot bien the
+    nam trong mutated_passwords.txt khi ap dung rule do.
     """
+    real_passwords = get_universe_passwords(passwords)
+    mutated_passwords = get_mutated_passwords(passwords)
     masks = {}
     for rule_id in RULE_IDS:
-        predicate = RULES[rule_id]["predicate"]
+        transform = RULES[rule_id]["transform"]
         mask = 0
-        for index, password in enumerate(passwords):
-            if predicate(password):
+        for index, password in enumerate(real_passwords):
+            candidates = normalize_candidates(transform(password))
+            if any(candidate in mutated_passwords for candidate in candidates):
                 mask |= 1 << index
         masks[rule_id] = mask
     return masks
 
 
 def mask_to_passwords(passwords, mask):
-    return [password for index, password in enumerate(passwords) if mask & (1 << index)]
+    real_passwords = get_universe_passwords(passwords)
+    return [password for index, password in enumerate(real_passwords) if mask & (1 << index)]
 
 
 def rule_names(rule_ids):
@@ -53,6 +79,7 @@ def rule_names(rule_ids):
 
 def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
     covered_passwords = mask_to_passwords(passwords, covered_mask)
+    total_passwords = len(get_universe_passwords(passwords))
     return {
         "method": method_name,
         "k": k,
@@ -61,19 +88,27 @@ def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
         "covered_mask": covered_mask,
         "covered_passwords": covered_passwords,
         "coverage_count": len(covered_passwords),
-        "total_passwords": len(passwords),
+        "total_passwords": total_passwords,
     }
 
 
 def save_answer(filename, result):
     """
     Ghi ket qua theo format:
+    - Method
+    - Fixed k
     - Selected rules
     - Covered passwords
     - Coverage
     """
     with open(filename, "w", encoding="utf-8") as f:
-        f.write("Selected rules:\n")
+        f.write("Method:\n")
+        f.write(f"{result['method']}\n")
+
+        f.write("\nFixed number of selected rules:\n")
+        f.write(f"{result['k']}\n")
+
+        f.write("\nSelected rules:\n")
         if result["selected_rules"]:
             for rule in result["selected_rules"]:
                 f.write(f"{rule}\n")
@@ -132,7 +167,7 @@ def solve_bruteforce(passwords, k):
     rule_ids = list(RULE_IDS)
     k = max(0, min(k, len(rule_ids)))
 
-    if k == 0 or not passwords:
+    if k == 0 or not get_universe_passwords(passwords):
         return result_payload("brute force", k, [], passwords, 0)
 
     best_rule_ids = []
@@ -193,7 +228,7 @@ def solve_math_model(passwords, k):
     rule_ids = list(RULE_IDS)
     k = max(0, min(k, len(rule_ids)))
 
-    if k == 0 or not passwords:
+    if k == 0 or not get_universe_passwords(passwords):
         return result_payload("math model", k, [], passwords, 0)
 
     best_subset_mask = 0
@@ -232,7 +267,7 @@ def solve_dp(passwords, k):
     rule_ids = list(RULE_IDS)
     k = max(0, min(k, len(rule_ids)))
 
-    if k == 0 or not passwords:
+    if k == 0 or not get_universe_passwords(passwords):
         return result_payload("dynamic programming", k, [], passwords, 0)
 
     @lru_cache(maxsize=None)
