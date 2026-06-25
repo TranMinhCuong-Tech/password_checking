@@ -19,7 +19,7 @@ def printMenuAlgorithms():
     [2] Greedy
     [3] Math Model
     [4] Dynamic Programming
-    [0] Exit
+    [0] Return to the previous menu
     """
     print(menu)
 
@@ -52,9 +52,9 @@ def runAlgorithms(k, password_files):
                 rules.checkPassword(dynamic_programming, k, password_files)
 
             elif choice == 0:
-                # Thoat chuong trinh.
-                print("[*] Exiting...\n")
-                break
+                # Quay ve menu truoc.
+                print("[*] Returning to the previous menu...\n")
+                return
 
             else:
                 # Lua chon khong hop le.
@@ -66,4 +66,4 @@ def runAlgorithms(k, password_files):
 
 
 if __name__ == "__main__":
-    runAlgorithms(3, ("real_passwords.txt", "mutated_passwords.txt"))
+    runAlgorithms(3, ("real_passwords_500_NCSC_breach_derived.txt", "mutated_passwords_1500.txt"))

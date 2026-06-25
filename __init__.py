@@ -1,23 +1,29 @@
-REAL_PASSWORD_FILE = "real_passwords.txt"
-MUTATED_PASSWORD_FILE = "mutated_passwords.txt"
+REAL_PASSWORD_FILE = "real_passwords_500_NCSC_breach_derived.txt"
+MUTATED_PASSWORD_FILE = "mutated_passwords_1500.txt"
 PASSWORD_FILES = (REAL_PASSWORD_FILE, MUTATED_PASSWORD_FILE)
 
 
 def showBanner():
     banner = """
-    ==========================================
-       PASSWORD CHECKING MAXIMUM COVERAGE
-    ==========================================
+            ██████▄ ▄█████▄ ▄█████▄ ▄█████▄ ██ ██ ██ ▄█████▄ ██████▄ ██████▄
+            ██▄▄▄██ ██▄▄▄██ ██▄▄▄▄  ██▄▄▄▄  ██ ██ ██ ██   ██ ██   ██ ██   ██
+            ██▀▀▀▀  ██▀▀▀██  ▀▀▀▀██  ▀▀▀▀██ ██ ██ ██ ██   ██ ██████  ██   ██
+            ██      ██   ██ ▀█████▀ ▀█████▀ ▀██████▀ ▀█████▀ ██  ▀██ ██████▀
+
+            ▄█████▄ ██   ██ ▄██████ ▄█████▄ ██  ▄██ ▐██▌ ▄█████▄ ▄█████▄
+            ██      ██▄▄▄██ ██▄▄▄▄  ██      ██▄██▀   ██  ██   ██ ██  ▄▄▄
+            ██      ██▀▀▀██ ██▀▀▀▀  ██      ██▀██▄   ██  ██   ██ ██   ██
+            ▀█████▀ ██   ██ ▀██████ ▀█████▀ ██  ▀██ ▐██▌ ██   ██ ▀█████▀
     """
     print(banner)
 
     description = """
     Universe:
-        - real_passwords.txt: original password dataset
-        - mutated_passwords.txt: transformed password dataset
+        - real_passwords_500_NCSC_breach_derived.txt: original password dataset
+        - mutated_passwords_1500.txt: transformed password dataset
 
     Goal:
-        Select at most k rules from rules.py so the covered passwords are maximized.
+        Select at most k transformation rules from rules.py so the covered real passwords are maximized.
     """
     print(description)
 
@@ -25,7 +31,7 @@ def showBanner():
 def prompt_k():
     while True:
         try:
-            k = int(input(f"[+] Enter number of rules k (1-{len(rules.RULES)}): "))
+            k = int(input(f"\n[+] Enter number of rules k (1-{len(rules.RULES)}): "))
             if 1 <= k <= len(rules.RULES):
                 return k
             print(f"[!] Please enter a number between 1 and {len(rules.RULES)}.")
@@ -43,6 +49,11 @@ except ImportError:
 
 if __name__ == "__main__":
     showBanner()
-    rules.printRuleCatalog()
-    selected_k = prompt_k()
-    pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+    while True:
+        rules.printRuleCatalog()
+        selected_k = prompt_k()
+        pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+        user_choice = input("[+] Press Enter to choose another k, or type 0 to exit: ").strip()
+        if user_choice == "0":
+            print("[*] Exiting...\n")
+            break

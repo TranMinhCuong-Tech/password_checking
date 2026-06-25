@@ -22,11 +22,12 @@
 
 Instead of checking a single password against a single rule, the project treats:
 
-- the full list of passwords in `passwords.txt` as the **universe set**
-- each rule as a **subset** of passwords that satisfy that rule
-- the user-chosen value `k` as the number of subsets to select
+- the full list of passwords in `real_passwords_500_NCSC_breach_derived.txt` as the **universe set**
+- the passwords in `mutated_passwords_1500.txt` as the **source set**
+- each rule as a **transformation** that produces candidate passwords from the source set
+- the user-chosen value `k` as the number of transformation rules to select
 
-The goal is to choose at most `k` rules so that the union of the selected rules covers as many passwords as possible.
+The goal is to choose at most `k` rules so that the union of the selected rules covers as many real passwords as possible.
 
 This makes the project a practical demonstration of:
 
@@ -39,14 +40,15 @@ This makes the project a practical demonstration of:
 
 Let:
 
-- `U` be the set of all passwords from `passwords.txt`
-- `S_i` be the set of passwords covered by rule `i`
+- `R` be the set of all real passwords
+- `M` be the set of mutated passwords
+- `T_i` be the set of real passwords reached by rule `i` after transforming passwords from `M`
 - `k` be the number of rules to choose
 
 The optimization target is:
 
 ```text
-maximize |S_1 ∪ S_2 ∪ ... ∪ S_k|
+maximize |T_1 ∪ T_2 ∪ ... ∪ T_k|
 ```
 
 with the constraint:
@@ -63,8 +65,8 @@ In simple terms:
 
 ## Project Features
 
-- Reads passwords from `passwords.txt`
-- Defines 7 candidate rules
+- Reads passwords from the real and mutated password files
+- Defines 20 candidate transformation rules
 - Lets the user choose an algorithm and a value of `k`
 - Solves the Maximum Coverage problem using 4 different strategies
 - Prints selected rules and covered passwords
@@ -74,17 +76,19 @@ In simple terms:
 
 The workflow is:
 
-1. Load all non-empty lines from `passwords.txt`
-2. Convert each rule into a bitmask
-3. Let the user choose an algorithm
-4. Let the user enter `k`
-5. Run the selected solver
-6. Measure time and memory usage
-7. Save the final selected rules and covered passwords
+1. Load all non-empty lines from `real_passwords_500_NCSC_breach_derived.txt`
+2. Load all non-empty lines from `mutated_passwords_1500.txt`
+3. Transform each mutated password by each rule
+4. Match transformed candidates against the real-password universe
+5. Let the user choose an algorithm
+6. Let the user enter `k`
+7. Run the selected solver
+8. Measure time and memory usage
+9. Save the final selected rules and covered real passwords
 
 The core implementation is in [`coverage_problem.py`](coverage_problem.py), which contains:
 
-- rule predicates
+- rule transformations
 - password loading
 - bitmask conversion
 - solver execution wrapper
@@ -128,7 +132,7 @@ For a full theoretical explanation of the problem, the NP-hardness background, a
 
 ## Candidate Rules
 
-The project currently defines 7 rules:
+The project currently defines 20 transformation rules:
 
 1. The first character is uppercase
 2. All characters are uppercase
@@ -138,7 +142,7 @@ The project currently defines 7 rules:
 6. The first character is a special symbol
 7. Standard password
 
-Each rule represents a subset of passwords from the universe set.
+Each rule transforms a mutated password into a candidate password and then checks whether that exact password exists in the real-password set.
 
 ## Project Structure
 
@@ -147,7 +151,8 @@ Each rule represents a subset of passwords from the universe set.
 ├── banner.png
 ├── coverage_problem.py
 ├── description.md
-├── passwords.txt
+├── real_passwords_500_NCSC_breach_derived.txt
+├── mutated_passwords_1500.txt
 ├── pwd_checking.py
 ├── README.md
 ├── rules.py
@@ -183,7 +188,7 @@ The output contains only the final answer:
 It does not include:
 
 - benchmark statistics
-- the full contents of `passwords.txt`
+- the full contents of the real-password file
 - passwords that are not covered by the selected rules
 - the selected rules themselves
 

@@ -9,38 +9,89 @@ except ImportError:
     from rules import RULES, RULE_IDS
 
 
-def load_passwords(filenames=("real_passwords.txt", "mutated_passwords.txt")):
-    """
-    Doc danh sach password tu mot hoac nhieu file dau vao.
-    Moi dong la mot password. Dong trong se bi bo qua.
-    """
-    if isinstance(filenames, str):
-        filenames = (filenames,)
+DEFAULT_REAL_PASSWORD_FILE = "real_passwords_500_NCSC_breach_derived.txt"
+DEFAULT_MUTATED_PASSWORD_FILE = "mutated_passwords_1500.txt"
 
+
+def load_password_file(filename):
+    """
+    Load one password file. Empty lines are ignored.
+    """
     passwords = []
-    for filename in filenames:
-        try:
-            with open(filename, "r", encoding="utf-8") as f:
-                passwords.extend(line.strip() for line in f if line.strip())
-        except FileNotFoundError:
-            print(f"[!] File '{filename}' not found.")
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            passwords.extend(line.strip() for line in f if line.strip())
+    except FileNotFoundError:
+        print(f"[!] File '{filename}' not found.")
     return passwords
 
 
-def build_rule_masks(passwords):
+def load_passwords(filenames=(DEFAULT_REAL_PASSWORD_FILE, DEFAULT_MUTATED_PASSWORD_FILE)):
     """
-    Chuyen moi rule thanh bitmask.
-    Bit i = 1 neu password thu i duoc rule do cover.
+    Load the real and mutated password datasets.
+
+    The function accepts either:
+    - no arguments, using the default project files
+    - a tuple/list of exactly two filenames
     """
+    if isinstance(filenames, (tuple, list)):
+        if len(filenames) != 2:
+            raise ValueError("Expected exactly two filenames: (real_file, mutated_file)")
+        real_filename, mutated_filename = filenames
+    else:
+        real_filename, mutated_filename = filenames, DEFAULT_MUTATED_PASSWORD_FILE
+    return load_password_file(real_filename), load_password_file(mutated_filename)
+
+
+def _iter_candidates(transformed_value):
+    if transformed_value is None:
+        return ()
+    if isinstance(transformed_value, str):
+        return (transformed_value,)
+    try:
+        return tuple(transformed_value)
+    except TypeError:
+        return (transformed_value,)
+
+
+def build_rule_masks(real_passwords, mutated_passwords):
+    """
+    Convert each transformation rule into a bitmask over the real-password universe.
+
+    Bit i = 1 if at least one mutated password transformed by the rule matches
+    real_passwords[i] exactly.
+    """
+    real_index = {password: index for index, password in enumerate(real_passwords)}
     masks = {}
+    matched_sources = {}
+
     for rule_id in RULE_IDS:
-        predicate = RULES[rule_id]["predicate"]
+        transformer = RULES[rule_id]["transform"]
         mask = 0
-        for index, password in enumerate(passwords):
-            if predicate(password):
-                mask |= 1 << index
+        seen_real_indices = set()
+        rule_examples = []
+
+        for source_password in mutated_passwords:
+            for candidate in _iter_candidates(transformer(source_password)):
+                real_index_pos = real_index.get(candidate)
+                if real_index_pos is None:
+                    continue
+
+                mask |= 1 << real_index_pos
+                if real_index_pos not in seen_real_indices:
+                    seen_real_indices.add(real_index_pos)
+                    rule_examples.append(
+                        {
+                            "source": source_password,
+                            "transformed": candidate,
+                            "matched_real": real_passwords[real_index_pos],
+                        }
+                    )
+
         masks[rule_id] = mask
-    return masks
+        matched_sources[rule_id] = rule_examples
+
+    return masks, matched_sources
 
 
 def mask_to_passwords(passwords, mask):
@@ -51,9 +102,9 @@ def rule_names(rule_ids):
     return [f"[{rule_id}] {RULES[rule_id]['label']}" for rule_id in rule_ids]
 
 
-def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
-    covered_passwords = mask_to_passwords(passwords, covered_mask)
-    return {
+def result_payload(method_name, k, selected_rule_ids, real_passwords, mutated_passwords, covered_mask, matched_sources=None):
+    covered_passwords = mask_to_passwords(real_passwords, covered_mask)
+    payload = {
         "method": method_name,
         "k": k,
         "selected_rule_ids": selected_rule_ids,
@@ -61,16 +112,18 @@ def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
         "covered_mask": covered_mask,
         "covered_passwords": covered_passwords,
         "coverage_count": len(covered_passwords),
-        "total_passwords": len(passwords),
+        "total_passwords": len(real_passwords),
+        "total_real_passwords": len(real_passwords),
+        "total_mutated_passwords": len(mutated_passwords),
     }
+    if matched_sources is not None:
+        payload["matched_sources"] = matched_sources
+    return payload
 
 
 def save_answer(filename, result):
     """
-    Ghi ket qua theo format:
-    - Selected rules
-    - Covered passwords
-    - Coverage
+    Save the selected rules and the real passwords covered by those rules.
     """
     with open(filename, "w", encoding="utf-8") as f:
         f.write("Selected rules:\n")
@@ -80,7 +133,7 @@ def save_answer(filename, result):
         else:
             f.write("null\n")
 
-        f.write("\nCovered passwords:\n")
+        f.write("\nCovered real passwords:\n")
         if result["covered_passwords"]:
             for password in result["covered_passwords"]:
                 f.write(f"{password}\n")
@@ -88,19 +141,19 @@ def save_answer(filename, result):
             f.write("null\n")
 
         f.write("\nCoverage:\n")
-        f.write(f"{result['coverage_count']} / {result['total_passwords']}\n")
+        f.write(f"{result['coverage_count']} / {result['total_real_passwords']}\n")
 
     print(f"[+] Results saved to: {filename}")
 
 
-def run_solver(method_name, solver, k, passwords, output_prefix):
+def run_solver(method_name, solver, k, real_passwords, mutated_passwords, output_prefix):
     """
-    Chay solver, do thoi gian va bo nho, roi ghi dap an ra file.
+    Run solver, measure time/memory, and save the result to disk.
     """
     tracemalloc.start()
     start_time = time.perf_counter()
 
-    result = solver(passwords, k)
+    result = solver(real_passwords, mutated_passwords, k)
 
     end_time = time.perf_counter()
     current_memory, peak_memory = tracemalloc.get_traced_memory()
@@ -116,7 +169,8 @@ def run_solver(method_name, solver, k, passwords, output_prefix):
             print(f"    {rule}")
     else:
         print("    null")
-    print(f"[+] Covered        : {result['coverage_count']}/{result['total_passwords']}")
+    print(f"[+] Covered(real)  : {result['coverage_count']}/{result['total_real_passwords']}")
+    print(f"[+] Mutated input  : {result['total_mutated_passwords']}")
     print(f"[+] Execution Time : {end_time - start_time:.6f} s")
     print(f"[+] Memory Used    : {current_memory / 1024:.2f} KB | {current_memory / (1024 * 1024):.4f} MB")
     print(f"[+] Peak Memory    : {peak_memory / 1024:.2f} KB | {peak_memory / (1024 * 1024):.4f} MB")
@@ -124,16 +178,16 @@ def run_solver(method_name, solver, k, passwords, output_prefix):
     return result
 
 
-def solve_bruteforce(passwords, k):
+def solve_bruteforce(real_passwords, mutated_passwords, k):
     """
-    Exact search: duyet tat ca to hop gom dung k rule.
+    Exact search: enumerate every combination of exactly k rules.
     """
-    rule_masks = build_rule_masks(passwords)
+    rule_masks, matched_sources = build_rule_masks(real_passwords, mutated_passwords)
     rule_ids = list(RULE_IDS)
     k = max(0, min(k, len(rule_ids)))
 
-    if k == 0 or not passwords:
-        return result_payload("brute force", k, [], passwords, 0)
+    if k == 0 or not real_passwords or not mutated_passwords:
+        return result_payload("brute force", k, [], real_passwords, mutated_passwords, 0, matched_sources)
 
     best_rule_ids = []
     best_mask = 0
@@ -149,14 +203,14 @@ def solve_bruteforce(passwords, k):
             best_mask = mask
             best_rule_ids = list(combo)
 
-    return result_payload("brute force", k, best_rule_ids, passwords, best_mask)
+    return result_payload("brute force", k, best_rule_ids, real_passwords, mutated_passwords, best_mask, matched_sources)
 
 
-def solve_greedy(passwords, k):
+def solve_greedy(real_passwords, mutated_passwords, k):
     """
-    Greedy: moi buoc chon rule tang coverage nhieu nhat.
+    Greedy: choose the rule with the largest marginal gain at each step.
     """
-    rule_masks = build_rule_masks(passwords)
+    rule_masks, matched_sources = build_rule_masks(real_passwords, mutated_passwords)
     remaining_rule_ids = set(RULE_IDS)
     selected_rule_ids = []
     covered_mask = 0
@@ -182,19 +236,19 @@ def solve_greedy(passwords, k):
         remaining_rule_ids.remove(best_rule_id)
         covered_mask = best_mask
 
-    return result_payload("greedy", k, selected_rule_ids, passwords, covered_mask)
+    return result_payload("greedy", k, selected_rule_ids, real_passwords, mutated_passwords, covered_mask, matched_sources)
 
 
-def solve_math_model(passwords, k):
+def solve_math_model(real_passwords, mutated_passwords, k):
     """
-    Exact bitmask model: duyet cac subset co dung k rule.
+    Exact bitmask model: enumerate every subset of exactly k rules.
     """
-    rule_masks = build_rule_masks(passwords)
+    rule_masks, matched_sources = build_rule_masks(real_passwords, mutated_passwords)
     rule_ids = list(RULE_IDS)
     k = max(0, min(k, len(rule_ids)))
 
-    if k == 0 or not passwords:
-        return result_payload("math model", k, [], passwords, 0)
+    if k == 0 or not real_passwords or not mutated_passwords:
+        return result_payload("math model", k, [], real_passwords, mutated_passwords, 0, matched_sources)
 
     best_subset_mask = 0
     best_coverage_mask = 0
@@ -221,19 +275,19 @@ def solve_math_model(passwords, k):
         for index, rule_id in enumerate(rule_ids)
         if best_subset_mask & (1 << index)
     ]
-    return result_payload("math model", k, selected_rule_ids, passwords, best_coverage_mask)
+    return result_payload("math model", k, selected_rule_ids, real_passwords, mutated_passwords, best_coverage_mask, matched_sources)
 
 
-def solve_dp(passwords, k):
+def solve_dp(real_passwords, mutated_passwords, k):
     """
-    Exact search co memoization.
+    Exact search with memoization.
     """
-    rule_masks = build_rule_masks(passwords)
+    rule_masks, matched_sources = build_rule_masks(real_passwords, mutated_passwords)
     rule_ids = list(RULE_IDS)
     k = max(0, min(k, len(rule_ids)))
 
-    if k == 0 or not passwords:
-        return result_payload("dynamic programming", k, [], passwords, 0)
+    if k == 0 or not real_passwords or not mutated_passwords:
+        return result_payload("dynamic programming", k, [], real_passwords, mutated_passwords, 0, matched_sources)
 
     @lru_cache(maxsize=None)
     def best_solution(start_index, remaining):
@@ -253,4 +307,4 @@ def solve_dp(passwords, k):
         return best_mask, best_selected
 
     covered_mask, selected_rules = best_solution(0, k)
-    return result_payload("dynamic programming", k, list(selected_rules), passwords, covered_mask)
+    return result_payload("dynamic programming", k, list(selected_rules), real_passwords, mutated_passwords, covered_mask, matched_sources)
