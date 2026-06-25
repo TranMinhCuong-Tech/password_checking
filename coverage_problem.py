@@ -1,99 +1,36 @@
 import itertools
-import string
 import time
 import tracemalloc
 from functools import lru_cache
 
-
-"""
-CAC HAM KIEM TRA RULE
-moi ham nhan vao 1 password va tra ve True/False.
-trong bai toan maximum coverage, moi rule tuong ung voi mot
-tap con cac password duoc no "phu" (cover).
-"""
-def first_char_upper(password):
-    # password co ky tu dau viet hoa
-    return len(password) > 0 and password[0].isupper()
+try:
+    from .rules import RULES, RULE_IDS
+except ImportError:
+    from rules import RULES, RULE_IDS
 
 
-def all_upper(password):
-    # toan bo password deu viet hoa
-    return len(password) > 0 and password.isupper()
-
-
-def all_lower(password):
-    # toan bo password deu viet thuong
-    return len(password) > 0 and password.islower()
-
-
-def ends_with_digit(password):
-    # password ky tu cuoi la so
-    return len(password) > 0 and password[-1].isdigit()
-
-
-def ends_with_special(password):
-    # password ky tu cuoi la ky tu dac biet
-    return len(password) > 0 and password[-1] in string.punctuation
-
-
-def starts_with_special(password):
-    # password ky tu dau la ky tu dac biet
-    return len(password) > 0 and password[0] in string.punctuation
-
-
-def standard_password(password):
+def load_passwords(filenames=("real_passwords.txt", "mutated_passwords.txt")):
     """
-    password chuan:
-    - do dai lon hon 15
-    - ky tu dau la chu hoa
-    - co it nhat 1 chu so
-    - co it nhat 1 ky tu dac biet
+    Doc danh sach password tu mot hoac nhieu file dau vao.
+    Moi dong la mot password. Dong trong se bi bo qua.
     """
-    return (
-        len(password) > 15
-        and password[0].isupper()
-        and any(ch.isdigit() for ch in password)
-        and any(ch in string.punctuation for ch in password)
-    )
+    if isinstance(filenames, str):
+        filenames = (filenames,)
 
-"""
-TAP RULE UNG VIEN
-RULES luu:
-- label: ten hien thi
-- predicate: ham kiem tra rule
-Day la tap cac "set" trong bai toan maximum coverage.
-"""
-RULES = {
-    1: {"label": "First character is uppercase", "predicate": first_char_upper},
-    2: {"label": "All characters are uppercase", "predicate": all_upper},
-    3: {"label": "All characters are lowercase", "predicate": all_lower},
-    4: {"label": "Last character is a digit", "predicate": ends_with_digit},
-    5: {"label": "Last character is a special symbol", "predicate": ends_with_special},
-    6: {"label": "First character is a special symbol", "predicate": starts_with_special},
-    7: {"label": "Standard password", "predicate": standard_password},
-}
-
-RULE_IDS = tuple(RULES.keys())
-
-
-def load_passwords(filename="passwords.txt"):
-    """
-    Doc danh sach password tu file dau vao.
-    Bo qua cac dong trong de tranh tinh nham vao tap du lieu.
-    """
-    try:
-        with open(filename, "r", encoding="utf-8") as f:
-            return [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        print(f"[!] File '{filename}' not found.")
-        return []
+    passwords = []
+    for filename in filenames:
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                passwords.extend(line.strip() for line in f if line.strip())
+        except FileNotFoundError:
+            print(f"[!] File '{filename}' not found.")
+    return passwords
 
 
 def build_rule_masks(passwords):
     """
     Chuyen moi rule thanh bitmask.
-    Moi bit i = 1 neu password thu i nam trong tap rule do.
-    Cach nay giup tinh union cac tap con nhanh hon rat nhieu.
+    Bit i = 1 neu password thu i duoc rule do cover.
     """
     masks = {}
     for rule_id in RULE_IDS:
@@ -107,47 +44,14 @@ def build_rule_masks(passwords):
 
 
 def mask_to_passwords(passwords, mask):
-    # Dich bitmask ve lai danh sach password tuong ung
     return [password for index, password in enumerate(passwords) if mask & (1 << index)]
 
 
 def rule_names(rule_ids):
-    # Tao nhan hien thi cho danh sach rule da chon
     return [f"[{rule_id}] {RULES[rule_id]['label']}" for rule_id in rule_ids]
 
 
-def passwords_for_rule(rule_id, passwords):
-    # Lọc đúng các password thỏa một rule duy nhất
-    predicate = RULES[rule_id]["predicate"]
-    return [password for password in passwords if predicate(password)]
-
-
-def save_answer(filename, passwords):
-    """
-    Ghi file output.
-    Y nghia output:
-    - chi luu dap an cuoi cung
-    - khong luu thong so benchmark
-    - khong luu danh sach rule
-    - khong copy toan bo passwords.txt
-    - neu khong co ket qua thi ghi null
-    """
-    with open(filename, "w", encoding="utf-8") as f:
-        if passwords:
-            for password in passwords:
-                f.write(f"{password}\n")
-        else:
-            f.write("null\n")
-
-    print(f"[+] Results saved to: {filename}")
-
-
 def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
-    """
-    Dong goi ket qua ve dang dict.
-    Cac solver khac nhau se tra ve cung 1 kieu du lieu de giao dien in ket qua
-    va luu file duoc thong nhat.
-    """
     covered_passwords = mask_to_passwords(passwords, covered_mask)
     return {
         "method": method_name,
@@ -161,33 +65,57 @@ def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
     }
 
 
-def run_solver(method_name, solver, rule_id, passwords, output_prefix):
+def save_answer(filename, result):
     """
-    Chay 1 solver, do thoi gian va bo nho, roi ghi dap an ra file.
-    Day la lop wrapper chung cho ca 4 thuat toan.
+    Ghi ket qua theo format:
+    - Selected rules
+    - Covered passwords
+    - Coverage
+    """
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("Selected rules:\n")
+        if result["selected_rules"]:
+            for rule in result["selected_rules"]:
+                f.write(f"{rule}\n")
+        else:
+            f.write("null\n")
+
+        f.write("\nCovered passwords:\n")
+        if result["covered_passwords"]:
+            for password in result["covered_passwords"]:
+                f.write(f"{password}\n")
+        else:
+            f.write("null\n")
+
+        f.write("\nCoverage:\n")
+        f.write(f"{result['coverage_count']} / {result['total_passwords']}\n")
+
+    print(f"[+] Results saved to: {filename}")
+
+
+def run_solver(method_name, solver, k, passwords, output_prefix):
+    """
+    Chay solver, do thoi gian va bo nho, roi ghi dap an ra file.
     """
     tracemalloc.start()
     start_time = time.perf_counter()
 
-    selected_passwords = passwords_for_rule(rule_id, passwords)
-    result = {
-        "method": method_name,
-        "rule_id": rule_id,
-        "selected_rule": rule_names([rule_id])[0],
-        "covered_passwords": selected_passwords,
-        "coverage_count": len(selected_passwords),
-        "total_passwords": len(passwords),
-    }
+    result = solver(passwords, k)
 
     end_time = time.perf_counter()
     current_memory, peak_memory = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
-    output_file = f"{output_prefix}_rule{rule_id}.txt"
-    save_answer(output_file, selected_passwords)
+    output_file = f"{output_prefix}_k{k}.txt"
+    save_answer(output_file, result)
 
     print(f"\n============= {method_name.upper()} =============")
-    print(f"[+] Selected Rule  : {result['selected_rule']}")
+    print("[+] Selected Rules :")
+    if result["selected_rules"]:
+        for rule in result["selected_rules"]:
+            print(f"    {rule}")
+    else:
+        print("    null")
     print(f"[+] Covered        : {result['coverage_count']}/{result['total_passwords']}")
     print(f"[+] Execution Time : {end_time - start_time:.6f} s")
     print(f"[+] Memory Used    : {current_memory / 1024:.2f} KB | {current_memory / (1024 * 1024):.4f} MB")
@@ -198,9 +126,7 @@ def run_solver(method_name, solver, rule_id, passwords, output_prefix):
 
 def solve_bruteforce(passwords, k):
     """
-    Giai dung bai toan maximum coverage bang cach duyet tat ca to hop.
-    Day la cach exact, cho ket qua dung tuyet doi, nhung chi phi tang nhanh
-    theo so luong rule.
+    Exact search: duyet tat ca to hop gom dung k rule.
     """
     rule_masks = build_rule_masks(passwords)
     rule_ids = list(RULE_IDS)
@@ -228,9 +154,7 @@ def solve_bruteforce(passwords, k):
 
 def solve_greedy(passwords, k):
     """
-    Giai xap xi bang tham lam.
-    Moi buoc chon rule lam tang so password duoc phu nhieu nhat hien tai.
-    Cach nay nhanh, nhung khong bao dam toi uu toan cuc.
+    Greedy: moi buoc chon rule tang coverage nhieu nhat.
     """
     rule_masks = build_rule_masks(passwords)
     remaining_rule_ids = set(RULE_IDS)
@@ -263,9 +187,7 @@ def solve_greedy(passwords, k):
 
 def solve_math_model(passwords, k):
     """
-    Duyet tat ca tap con co dung k rule bang bitmask.
-    Cach nay gan voi mo hinh toan hoc cua maximum coverage va de trinh bay
-    trong bao cao.
+    Exact bitmask model: duyet cac subset co dung k rule.
     """
     rule_masks = build_rule_masks(passwords)
     rule_ids = list(RULE_IDS)
@@ -304,8 +226,7 @@ def solve_math_model(passwords, k):
 
 def solve_dp(passwords, k):
     """
-    Dung memoization de luu ket qua tot nhat cho moi trang thai.
-    Ban chat day van la exact search, nhung co cache de tranh tinh lai.
+    Exact search co memoization.
     """
     rule_masks = build_rule_masks(passwords)
     rule_ids = list(RULE_IDS)
@@ -315,19 +236,16 @@ def solve_dp(passwords, k):
         return result_payload("dynamic programming", k, [], passwords, 0)
 
     @lru_cache(maxsize=None)
-    def best_solution(selected_mask, remaining):
-        # selected_mask: trang thai cac rule da chon
-        # remaining: so rule con lai can chon
+    def best_solution(start_index, remaining):
         if remaining == 0:
             return 0, ()
 
         best_mask = 0
         best_selected = ()
-        for index, rule_id in enumerate(rule_ids):
-            if selected_mask & (1 << index):
-                # Da chon rule nay roi thi bo qua.
-                continue
-            rest_mask, rest_selected = best_solution(selected_mask | (1 << index), remaining - 1)
+        last_start = len(rule_ids) - remaining + 1
+        for index in range(start_index, last_start):
+            rule_id = rule_ids[index]
+            rest_mask, rest_selected = best_solution(index + 1, remaining - 1)
             candidate_mask = rule_masks[rule_id] | rest_mask
             if candidate_mask.bit_count() > best_mask.bit_count() or not best_selected:
                 best_mask = candidate_mask

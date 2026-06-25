@@ -24,7 +24,7 @@ def printMenuAlgorithms():
     print(menu)
 
 
-def runAlgorithms():
+def runAlgorithms(k, password_files):
     # vong lap cua giao dien chinh
     while True:
         try:
@@ -34,22 +34,22 @@ def runAlgorithms():
             if choice == 1:
                 # thuat toan vet can
                 print("[*] Running Brute Force...\n")
-                rules.checkPassword(brute_force)
+                rules.checkPassword(brute_force, k, password_files)
 
             elif choice == 2:
                 # thuat toan tham lam.
                 print("[*] Running Greedy...\n")
-                rules.checkPassword(greedy)
+                rules.checkPassword(greedy, k, password_files)
 
             elif choice == 3:
                 # Bitmask exact search.
                 print("[*] Running Math Model...\n")
-                rules.checkPassword(math_model)
+                rules.checkPassword(math_model, k, password_files)
 
             elif choice == 4:
                 # Memoized exact search.
                 print("[*] Running Dynamic Programming...\n")
-                rules.checkPassword(dynamic_programming)
+                rules.checkPassword(dynamic_programming, k, password_files)
 
             elif choice == 0:
                 # Thoat chuong trinh.
@@ -66,4 +66,4 @@ def runAlgorithms():
 
 
 if __name__ == "__main__":
-    runAlgorithms()
+    runAlgorithms(3, ("real_passwords.txt", "mutated_passwords.txt"))
