@@ -13,10 +13,7 @@ except ImportError:
 
 
 def printMenuAlgorithms():
-    """
-    In menu cap 1.
-    Nguoi dung se chon 1 trong 4 cach giai maximum coverage.
-    """
+    # chon thuat toan de giai quyet
     menu = """
     [1] Brute Force
     [2] Greedy
@@ -28,30 +25,30 @@ def printMenuAlgorithms():
 
 
 def runAlgorithms():
-    """Vong lap giao dien chinh cua chuong trinh."""
+    # vong lap cua giao dien chinh
     while True:
         try:
             printMenuAlgorithms()
             choice = int(input("\n[+] Enter your choice: "))
 
             if choice == 1:
-                # Exact search: duyet to hop rule.
-                print("[*] Running Brute Force maximum coverage...\n")
+                # thuat toan vet can
+                print("[*] Running Brute Force...\n")
                 rules.checkPassword(brute_force)
 
             elif choice == 2:
-                # Thuat toan tham lam.
-                print("[*] Running Greedy maximum coverage...\n")
+                # thuat toan tham lam.
+                print("[*] Running Greedy...\n")
                 rules.checkPassword(greedy)
 
             elif choice == 3:
                 # Bitmask exact search.
-                print("[*] Running Math Model maximum coverage...\n")
+                print("[*] Running Math Model...\n")
                 rules.checkPassword(math_model)
 
             elif choice == 4:
                 # Memoized exact search.
-                print("[*] Running Dynamic Programming maximum coverage...\n")
+                print("[*] Running Dynamic Programming...\n")
                 rules.checkPassword(dynamic_programming)
 
             elif choice == 0:

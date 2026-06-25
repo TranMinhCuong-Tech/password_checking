@@ -5,10 +5,7 @@ except ImportError:
 
 
 def printRuleCatalog():
-    """
-    In danh sach rule ung vien.
-    Moi lan chay chi chon 1 rule de lay dung tap password tuong ung.
-    """
+    # Moi lan chay chi chon 1 rule de lay dung tap password tuong ung.
     menu = """
     Candidate rules:
     [1] First character is uppercase
@@ -24,7 +21,7 @@ def printRuleCatalog():
 
 
 def _prompt_k():
-    """Nhap ID cua rule can chon va kiem tra hop le."""
+    # Nhap ID cua rule can chon va kiem tra hop le
     while True:
         try:
             k = int(input(f"[+] Enter your choice: "))
@@ -36,10 +33,7 @@ def _prompt_k():
 
 
 def checkPassword(algorithm_module):
-    """
-    Chon 1 rule va goi solver.
-    Ket qua chi gom cac password thoa dung rule do.
-    """
+    # Ket qua chi gom cac password thoa dung rule do
     try:
         passwords = algorithm_module.load_passwords()
     except AttributeError:

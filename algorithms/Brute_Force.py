@@ -5,12 +5,12 @@ except ImportError:
 
 
 def solve_max_coverage(k, passwords):
-    """Goi giai phap exact bang duyet to hop."""
+    #  Goi giai phap exact bang duyet to hop
     return run_solver("brute force", solve_bruteforce, k, passwords, "output_brute")
 
 
 def check_password(k, passwords=None):
-    """Ham goi chung de giu cau truc dong nhat voi cac module khac."""
+    # Ham goi chung de giu cau truc dong nhat voi cac module khac
     if passwords is None:
         passwords = load_passwords()
     if not passwords:

@@ -5,12 +5,12 @@ except ImportError:
 
 
 def solve_max_coverage(k, passwords):
-    """Goi giai phap tham lam xap xi."""
+    # Goi giai phap tham lam xap xi
     return run_solver("greedy", solve_greedy, k, passwords, "output_greedy")
 
 
 def check_password(k, passwords=None):
-    """Ham goi chung de giu cau truc dong nhat voi module khac."""
+    # Ham goi chung de giu cau truc dong nhat voi module khac
     if passwords is None:
         passwords = load_passwords()
     if not passwords:

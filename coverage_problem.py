@@ -5,45 +5,45 @@ import tracemalloc
 from functools import lru_cache
 
 
-# ============================================================
-# CAC HAM KIEM TRA RULE
-# Moi ham nhan vao 1 password va tra ve True/False.
-# Trong bai toan maximum coverage, moi rule tuong ung voi mot
-# tap con cac password duoc no "phu" (cover).
-# ============================================================
+"""
+CAC HAM KIEM TRA RULE
+moi ham nhan vao 1 password va tra ve True/False.
+trong bai toan maximum coverage, moi rule tuong ung voi mot
+tap con cac password duoc no "phu" (cover).
+"""
 def first_char_upper(password):
-    """Tra ve True neu ky tu dau tien la chu hoa."""
+    # password co ky tu dau viet hoa
     return len(password) > 0 and password[0].isupper()
 
 
 def all_upper(password):
-    """Tra ve True neu toan bo password la chu hoa."""
+    # toan bo password deu viet hoa
     return len(password) > 0 and password.isupper()
 
 
 def all_lower(password):
-    """Tra ve True neu toan bo password la chu thuong."""
+    # toan bo password deu viet thuong
     return len(password) > 0 and password.islower()
 
 
 def ends_with_digit(password):
-    """Tra ve True neu ky tu cuoi cung la chu so."""
+    # password ky tu cuoi la so
     return len(password) > 0 and password[-1].isdigit()
 
 
 def ends_with_special(password):
-    """Tra ve True neu ky tu cuoi cung la ky tu dac biet."""
+    # password ky tu cuoi la ky tu dac biet
     return len(password) > 0 and password[-1] in string.punctuation
 
 
 def starts_with_special(password):
-    """Tra ve True neu ky tu dau tien la ky tu dac biet."""
+    # password ky tu dau la ky tu dac biet
     return len(password) > 0 and password[0] in string.punctuation
 
 
 def standard_password(password):
     """
-    Rule tong hop:
+    password chuan:
     - do dai lon hon 15
     - ky tu dau la chu hoa
     - co it nhat 1 chu so
@@ -56,14 +56,13 @@ def standard_password(password):
         and any(ch in string.punctuation for ch in password)
     )
 
-
-# ============================================================
-# TAP RULE UNG VIEN
-# RULES luu:
-# - label: ten hien thi
-# - predicate: ham kiem tra rule
-# Day la tap cac "set" trong bai toan maximum coverage.
-# ============================================================
+"""
+TAP RULE UNG VIEN
+RULES luu:
+- label: ten hien thi
+- predicate: ham kiem tra rule
+Day la tap cac "set" trong bai toan maximum coverage.
+"""
 RULES = {
     1: {"label": "First character is uppercase", "predicate": first_char_upper},
     2: {"label": "All characters are uppercase", "predicate": all_upper},
@@ -108,17 +107,17 @@ def build_rule_masks(passwords):
 
 
 def mask_to_passwords(passwords, mask):
-    """Dich bitmask ve lai danh sach password tuong ung."""
+    # Dich bitmask ve lai danh sach password tuong ung
     return [password for index, password in enumerate(passwords) if mask & (1 << index)]
 
 
 def rule_names(rule_ids):
-    """Tao nhan hien thi cho danh sach rule da chon."""
+    # Tao nhan hien thi cho danh sach rule da chon
     return [f"[{rule_id}] {RULES[rule_id]['label']}" for rule_id in rule_ids]
 
 
 def passwords_for_rule(rule_id, passwords):
-    """Lọc đúng các password thỏa một rule duy nhất."""
+    # Lọc đúng các password thỏa một rule duy nhất
     predicate = RULES[rule_id]["predicate"]
     return [password for password in passwords if predicate(password)]
 

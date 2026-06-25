@@ -1,5 +1,4 @@
 def showBanner():
-    """In gioi thieu ngan ve bai toan maximum coverage."""
     banner = """
             ██████▄ ▄█████▄ ▄█████▄ ▄█████▄ ██ ██ ██ ▄█████▄ ██████▄ ██████▄
             ██▄▄▄██ ██▄▄▄██ ██▄▄▄▄  ██▄▄▄▄  ██ ██ ██ ██   ██ ██   ██ ██   ██
@@ -13,6 +12,7 @@ def showBanner():
     """
     print(banner)
 
+    # mo ta cach hoat dong
     description = """
     Each rule represents a subset of passwords that satisfy a specific condition. 
     Given a collection of rules and a password dataset, 
@@ -20,7 +20,6 @@ def showBanner():
         the total number of covered passwords is maximized.
     """
     print(description)
-
 
 showBanner()
 
