@@ -5,9 +5,15 @@ PASSWORD_FILES = (REAL_PASSWORD_FILE, MUTATED_PASSWORD_FILE)
 
 def showBanner():
     banner = """
-    ==========================================
-       PASSWORD CHECKING MAXIMUM COVERAGE
-    ==========================================
+            ██████▄ ▄█████▄ ▄█████▄ ▄█████▄ ██ ██ ██ ▄█████▄ ██████▄ ██████▄
+            ██▄▄▄██ ██▄▄▄██ ██▄▄▄▄  ██▄▄▄▄  ██ ██ ██ ██   ██ ██   ██ ██   ██
+            ██▀▀▀▀  ██▀▀▀██  ▀▀▀▀██  ▀▀▀▀██ ██ ██ ██ ██   ██ ██████  ██   ██
+            ██      ██   ██ ▀█████▀ ▀█████▀ ▀██████▀ ▀█████▀ ██  ▀██ ██████▀
+
+            ▄█████▄ ██   ██ ▄██████ ▄█████▄ ██  ▄██ ▐██▌ ▄█████▄ ▄█████▄
+            ██      ██▄▄▄██ ██▄▄▄▄  ██      ██▄██▀   ██  ██   ██ ██  ▄▄▄
+            ██      ██▀▀▀██ ██▀▀▀▀  ██      ██▀██▄   ██  ██   ██ ██   ██
+            ▀█████▀ ██   ██ ▀██████ ▀█████▀ ██  ▀██ ▐██▌ ██   ██ ▀█████▀
     """
     print(banner)
 
@@ -26,7 +32,11 @@ def prompt_k():
     print("\n[+] Choose a fixed number of rules before selecting an algorithm.")
     while True:
         try:
-            k = int(input(f"[+] Enter number of rules k (1-{len(rules.RULES)}): "))
+            k_raw = input(f"[+] Enter number of rules k (1-{len(rules.RULES)}): ").strip().lower()
+            if int(k_raw) == 0:
+                return "exit"
+
+            k = int(k_raw)
             if 1 <= k <= len(rules.RULES):
                 return k
             print(f"[!] Please enter a number between 1 and {len(rules.RULES)}.")
@@ -44,8 +54,14 @@ except ImportError:
 
 if __name__ == "__main__":
     showBanner()
-    rules.printRuleCatalog()
-    selected_k = prompt_k()
-    print(f"\n[+] Fixed number of selected rules: {selected_k}")
-    print("[+] Now choose an algorithm to find the best coverage.")
-    pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+    while True:
+        rules.printRuleCatalog()
+        selected_k = prompt_k()
+        if selected_k == "exit":
+            print("[*] Exiting...\n")
+            break
+        print(f"\n[+] Fixed number of selected rules: {selected_k}")
+        print("[+] Now choose an algorithm to find the best coverage.")
+        result = pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+        if result == "exit":
+            break

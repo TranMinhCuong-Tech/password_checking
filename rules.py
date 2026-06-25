@@ -121,6 +121,7 @@ def printRuleCatalog():
     print("\nCandidate mutation rules:")
     for rule_id in RULE_IDS:
         print(f"    [{rule_id}] {RULES[rule_id]['label']}")
+    print("    [0] Exit")
 
 
 def checkPassword(algorithm_module, k, password_files):

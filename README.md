@@ -1,157 +1,188 @@
-<p align="center">
-  <img src="banner.png" alt="Password Checking" width="700">
-</p>
+<div align="center">
 
+```bash
+██████▄ ▄█████▄ ▄█████▄ ▄█████▄ ██ ██ ██ ▄█████▄ ██████▄ ██████▄
+██▄▄▄██ ██▄▄▄██ ██▄▄▄▄  ██▄▄▄▄  ██ ██ ██ ██   ██ ██   ██ ██   ██
+██▀▀▀▀  ██▀▀▀██  ▀▀▀▀██  ▀▀▀▀██ ██ ██ ██ ██   ██ ██████  ██   ██
+██      ██   ██ ▀█████▀ ▀█████▀ ▀██████▀ ▀█████▀ ██  ▀██ ██████▀
+
+▄█████▄ ██   ██ ▄██████ ▄█████▄ ██  ▄██ ▐██▌ ▄█████▄ ▄█████▄
+██      ██▄▄▄██ ██▄▄▄▄  ██      ██▄██▀   ██  ██   ██ ██  ▄▄▄
+██      ██▀▀▀██ ██▀▀▀▀  ██      ██▀██▄   ██  ██   ██ ██   ██
+▀█████▀ ██   ██ ▀██████ ▀█████▀ ██  ▀██ ▐██▌ ██   ██ ▀█████▀
+```
+
+</div>
 # Password Checking Maximum Coverage
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Key Idea](#key-idea)
-- [Project Features](#project-features)
-- [How It Works](#how-it-works)
+- [Wiki & Theory](#wiki--theory)
+- [Project Goal](#project-goal)
+- [NP Problem Used in This Project](#np-problem-used-in-this-project)
+- [What Maximum Coverage Means](#what-maximum-coverage-means)
+- [How the Project Works](#how-the-project-works)
 - [Algorithms](#algorithms)
-- [Project Structure](#project-structure)
-- [Output Files](#output-files)
-- [Run the Program](#run-the-program)
-- [Full Theory Description](#full-theory-description)
+- [Folder Structure](#folder-structure)
+- [How to Run](#how-to-run)
+- [Output Format](#output-format)
+- [Notes on Rules](#notes-on-rules)
 
 ## Overview
 
-`password_checking_maximum_coverage` is a small academic project that models password-rule selection as the **Maximum Coverage** problem.
+`password_checking_maximum_coverage` is an academic project for studying **algorithmic complexity** through a classic NP-Hard optimization problem: **Maximum Coverage**.
 
-Instead of checking a single password against a single rule, the project treats:
+The goal is not just to check passwords. Instead, the project is designed to:
 
-- the full list of passwords in `passwords.txt` as the **universe set**
-- each rule as a **subset** of passwords that satisfy that rule
-- the user-chosen value `k` as the number of subsets to select
+- model a real problem as a combinatorial optimization problem
+- compare brute force, greedy, bitmask, and dynamic programming approaches
+- show the difference between exact and approximate solutions
+- demonstrate why NP-Hard problems become expensive as the input size grows
 
-The goal is to choose at most `k` rules so that the union of the selected rules covers as many passwords as possible.
+## Wiki & Theory
 
-This makes the project a practical demonstration of:
+The full theoretical explanation and detailed project description are stored in:
 
-- NP and NP-hard problem modeling
-- Maximum Coverage optimization
-- exact search versus approximation
-- bitmask-based set operations
+- [wiki.md](wiki.md)
 
-## Key Idea
+That file includes:
 
-Let:
+- NP and NP-Hard theory
+- Maximum Coverage theory
+- detailed analysis of every algorithm in `algorithms/`
+- a file-by-file explanation of the project
+- a detailed explanation of how Maximum Coverage is implemented here
 
-- `U` be the set of all passwords from `passwords.txt`
-- `S_i` be the set of passwords covered by rule `i`
-- `k` be the number of rules to choose
+## Project Goal
 
-The optimization target is:
+The main idea of the project is:
+
+- take a real password list in `real_passwords.txt`
+- take a mutated password list in `mutated_passwords.txt`
+- treat each `rule` as a string transformation
+- if the transformed result matches a password in the real password set, that password is considered covered
+- choose at most `k` rules so that the number of covered real passwords is maximized
+
+This helps illustrate:
+
+- how a practical problem can be mapped to an NP-Hard model
+- how sets can be represented with bitmasks
+- how exact and approximate methods trade accuracy for speed
+
+## NP Problem Used in This Project
+
+The NP-Hard problem used in this project is **Maximum Coverage**.
+
+In short:
+
+- there is a universe set `U`
+- there are many subsets `S1, S2, ..., Sm`
+- you may choose at most `k` subsets
+- the objective is to maximize the size of the union of the chosen subsets
+
+Formula:
 
 ```text
-maximize |S_1 ∪ S_2 ∪ ... ∪ S_k|
+maximize |S1 ∪ S2 ∪ ... ∪ Sk|
+subject to choose at most k sets
 ```
 
-with the constraint:
+In this project:
 
-```text
-select at most k rules
-```
+- `U` is the set of real passwords
+- each `rule` defines a subset of real passwords that can be matched through mutation
+- the solver must choose `k` rules that cover the largest number of real passwords
 
-In simple terms:
+## What Maximum Coverage Means
 
-- each rule covers some passwords
-- different rules may overlap
-- the project tries to maximize total coverage while avoiding wasted overlap
+Imagine:
 
-## Project Features
+- you have 100 users
+- each marketing campaign reaches a different group of users
+- you can only run 3 campaigns
+- you want those 3 campaigns to reach as many users as possible
 
-- Reads passwords from `passwords.txt`
-- Defines 7 candidate rules
-- Lets the user choose an algorithm and a value of `k`
-- Solves the Maximum Coverage problem using 4 different strategies
-- Prints selected rules and covered passwords
-- Writes the final result to an output file
+That is Maximum Coverage.
 
-## How It Works
+The important part is:
+
+- subsets may overlap
+- picking two very similar subsets may waste one of your `k` choices
+- the goal is to balance coverage and overlap
+
+## How the Project Works
 
 The workflow is:
 
-1. Load all non-empty lines from `passwords.txt`
-2. Convert each rule into a bitmask
-3. Let the user choose an algorithm
-4. Let the user enter `k`
-5. Run the selected solver
-6. Measure time and memory usage
-7. Save the final selected rules and covered passwords
+1. Load all real passwords from `real_passwords.txt`
+2. Load all mutated passwords from `mutated_passwords.txt`
+3. The user chooses the number of rules `k`
+4. The user selects an algorithm
+5. The program applies each rule as a transformation
+6. If a transformed result matches a password in the mutated set, the corresponding real password is counted as covered
+7. The selected algorithm chooses the best `k` rules according to its strategy
+8. The result is printed and saved to an output file
 
-The core implementation is in [`coverage_problem.py`](coverage_problem.py), which contains:
+Implementation-wise:
 
-- rule predicates
-- password loading
-- bitmask conversion
-- solver execution wrapper
-- result formatting
+- `rules.py` stores the rule catalog and the rules menu
+- `coverage_problem.py` contains the core Maximum Coverage logic
+- `pwd_checking.py` provides the algorithm selection menu
+- `__init__.py` is the main entry point
 
 ## Algorithms
 
-The project includes 4 solution methods:
+The project includes 4 solving strategies.
 
 ### 1. Brute Force
 
-Tries every possible combination of exactly `k` rules.
+Try every combination of exactly `k` rules.
 
-- Guarantees the optimal answer
-- Very expensive when the number of rules grows
+- exact solution
+- grows very fast with the number of rules
+- used as a baseline for comparison
 
 ### 2. Greedy
 
-Chooses the rule that adds the largest number of newly covered passwords at each step.
+At each step, choose the rule that covers the largest number of newly covered passwords.
 
-- Fast and simple
-- Does not guarantee the global optimum
+- faster than brute force
+- does not always guarantee the optimal answer
+- a common approximation strategy for Maximum Coverage
 
 ### 3. Math Model
 
-Enumerates every subset of rules using bitmasks and evaluates the coverage exactly.
+Enumerate all subsets of rules using bitmasks.
 
-- Closely matches the mathematical formulation of Maximum Coverage
-- Exact, but still exponential in the number of rules
+- exact
+- makes set operations easy to understand
+- useful for learning how combinatorial problems can be encoded as bits
 
 ### 4. Dynamic Programming
 
-Uses recursion with memoization to avoid recomputing repeated states.
+Use recursion with memoization to avoid recomputing repeated states.
 
-- Exact solution method
-- More efficient than naive exhaustive search in repeated subproblems
+- exact solution
+- can be better than plain brute force in repeated subproblems
+- a good example of state optimization
 
-For a full theoretical explanation of the problem, the NP-hardness background, and a detailed breakdown of every algorithm, see:
-
-- [`description.md`](description.md)
-
-## Candidate Rules
-
-The project currently defines 7 rules:
-
-1. The first character is uppercase
-2. All characters are uppercase
-3. All characters are lowercase
-4. The last character is a digit
-5. The last character is a special symbol
-6. The first character is a special symbol
-7. Standard password
-
-Each rule represents a subset of passwords from the universe set.
-
-## Project Structure
+## Folder Structure
 
 ```text
 .
+├── __init__.py
+├── README.md
+├── wiki.md
 ├── banner.png
 ├── coverage_problem.py
-├── description.md
-├── passwords.txt
 ├── pwd_checking.py
-├── README.md
 ├── rules.py
-├── __init__.py
+├── real_passwords.txt
+├── mutated_passwords.txt
+├── real_passwords_500_NCSC_breach_derived.txt
+├── mutated_passwords_1500.txt
+├── output_*.txt
 └── algorithms
     ├── Brute_Force.py
     ├── Dynamic_Programming.py
@@ -159,50 +190,73 @@ Each rule represents a subset of passwords from the universe set.
     └── Math_Model.py
 ```
 
-Notes:
+## How to Run
 
-- `coverage_problem.py` contains the shared logic and the exact solver implementations
-- `pwd_checking.py` provides the main command-line menu
-- `rules.py` handles rule selection and the `k` prompt
-- each file in `algorithms/` is a small wrapper around one solving strategy
+The main file is `__init__.py`.
 
-## Output Files
-
-Each solver writes to its own output file, and the filename includes the selected rule ID:
-
-- `output_brute_rule1.txt`
-- `output_greedy_rule2.txt`
-- `output_math_model_rule5.txt`
-- `output_dp_rule7.txt`
-
-The output contains only the final answer:
-
-- the covered passwords
-- or `null` if nothing is covered
-
-It does not include:
-
-- benchmark statistics
-- the full contents of `passwords.txt`
-- passwords that are not covered by the selected rules
-- the selected rules themselves
-
-If no result is available, the program prints `null`.
-
-## Run the Program
+Run it with:
 
 ```bash
 python __init__.py
 ```
 
-Then:
+Program flow:
 
-1. Choose an algorithm
-2. Enter rule ('k')
-3. View the selected rules and covered passwords
+1. The banner and short description are displayed
+2. The rules catalog is shown
+3. You enter the number of rules `k`
+4. You choose an algorithm from the menu
+5. The program runs and prints the result
 
-## Full Theory Description
+### Menu Keys
 
-For the detailed Vietnamese explanation of the theory, project behavior, and algorithm analysis, open:
+#### Rules Menu
 
-- [`description.md`](description.md)
+- `0` or `e`: exit the program
+- `1` to `20`: choose the number of rules
+
+#### Algorithm Menu
+
+- `1`: Brute Force
+- `2`: Greedy
+- `3`: Math Model
+- `4`: Dynamic Programming
+- `0`: return to the previous menu
+- `-1` or `e`: exit the program
+
+## Output Format
+
+Each solver writes its result to a separate output file, for example:
+
+- `output_brute_k5.txt`
+- `output_greedy_k3.txt`
+- `output_math_model_k10.txt`
+- `output_dp_k7.txt`
+
+The output usually includes:
+
+- the selected rules
+- the covered real passwords
+- the coverage ratio
+
+## Notes on Rules
+
+In the current version, `rules.py` is not a simple boolean checker anymore.
+
+Instead:
+
+- each rule is a string transformation
+- the rule is applied to passwords
+- the transformed result is matched against the password dataset
+
+This design matches the Maximum Coverage idea:
+
+- start from a large input set
+- generate candidate subsets through transformations
+- choose the best `k` sets according to the coverage objective
+
+If you want, I can also:
+
+1. translate `wiki.md` into English
+2. make the README shorter and more polished for GitHub
+3. add a "Quick Start" section with example runs

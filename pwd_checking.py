@@ -19,7 +19,8 @@ def printMenuAlgorithms():
     [2] Greedy
     [3] Math Model
     [4] Dynamic Programming
-    [0] Exit
+    [0] Return to the previous menu
+    [-1] Exit
     """
     print(menu)
 
@@ -29,7 +30,14 @@ def runAlgorithms(k, password_files):
     while True:
         try:
             printMenuAlgorithms()
-            choice = int(input("\n[+] Enter your choice: "))
+            choice_raw = input("\n[+] Enter your choice: ").strip().lower()
+
+            if choice_raw == "e":
+                # Thoat chuong trinh.
+                print("[*] Exiting...\n")
+                return "exit"
+
+            choice = int(choice_raw)
 
             if choice == 1:
                 # thuat toan vet can
@@ -52,9 +60,14 @@ def runAlgorithms(k, password_files):
                 rules.checkPassword(dynamic_programming, k, password_files)
 
             elif choice == 0:
+                # Quay ve menu truoc.
+                print("[*] Returning to the previous menu...\n")
+                return "back"
+
+            elif choice == -1:
                 # Thoat chuong trinh.
                 print("[*] Exiting...\n")
-                break
+                return "exit"
 
             else:
                 # Lua chon khong hop le.
