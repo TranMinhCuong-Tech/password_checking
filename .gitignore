@@ -1,3 +1,4 @@
-env/
+.env/
 __pycache__/
 algorithms/__pycache__/
+.agent/gent
