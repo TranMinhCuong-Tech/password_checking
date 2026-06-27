@@ -1,19 +1,28 @@
 try:
     from . import rules
     from .algorithms import Brute_Force as brute_force
+    from .algorithms import Dynamic_Programming as dynamic_programming
     from .algorithms import Greedy as greedy
     from .algorithms import Math_Model as math_model
-    from .algorithms import Dynamic_Programming as dynamic_programming
+    from .coverage_problem import load_passwords
 except ImportError:
     import rules
     import algorithms.Brute_Force as brute_force
+    import algorithms.Dynamic_Programming as dynamic_programming
     import algorithms.Greedy as greedy
     import algorithms.Math_Model as math_model
-    import algorithms.Dynamic_Programming as dynamic_programming
+    from coverage_problem import load_passwords
+
+
+ALGORITHMS = {
+    1: ("Brute Force", brute_force),
+    2: ("Greedy", greedy),
+    3: ("Math Model", math_model),
+    4: ("Dynamic Programming", dynamic_programming),
+}
 
 
 def printMenuAlgorithms():
-    # chon thuat toan de giai quyet
     menu = """
     [1] Brute Force
     [2] Greedy
@@ -24,44 +33,51 @@ def printMenuAlgorithms():
     print(menu)
 
 
+def load_password_data(password_files):
+    password_data = load_passwords(password_files)
+    real_count = len(password_data.get("real", []))
+    mutated_count = len(password_data.get("mutated", []))
+
+    print(f"[+] Loaded real passwords    : {real_count}")
+    print(f"[+] Loaded mutated passwords : {mutated_count}")
+
+    if real_count == 0 or mutated_count == 0:
+        print("[!] Missing password data. Please check input files.")
+        return None
+
+    return password_data
+
+
+def run_selected_algorithm(choice, k, password_data):
+    algorithm_name, algorithm_module = ALGORITHMS[choice]
+    print(f"[*] Running {algorithm_name} with k = {k}...\n")
+    return algorithm_module.solve_max_coverage(k, password_data)
+
+
 def runAlgorithms(k, password_files):
-    # vong lap cua giao dien chinh
+    password_data = load_password_data(password_files)
+    if password_data is None:
+        return
+
+    print(f"[+] Total candidate rules    : {len(rules.RULES)}")
+    print(f"[+] Fixed selected rules k   : {k}")
+
     while True:
         try:
             printMenuAlgorithms()
             choice = int(input("\n[+] Enter your choice: "))
 
-            if choice == 1:
-                # thuat toan vet can
-                print("[*] Running Brute Force...\n")
-                rules.checkPassword(brute_force, k, password_files)
-
-            elif choice == 2:
-                # thuat toan tham lam.
-                print("[*] Running Greedy...\n")
-                rules.checkPassword(greedy, k, password_files)
-
-            elif choice == 3:
-                # Bitmask exact search.
-                print("[*] Running Math Model...\n")
-                rules.checkPassword(math_model, k, password_files)
-
-            elif choice == 4:
-                # Memoized exact search.
-                print("[*] Running Dynamic Programming...\n")
-                rules.checkPassword(dynamic_programming, k, password_files)
-
-            elif choice == 0:
-                # Thoat chuong trinh.
+            if choice == 0:
                 print("[*] Exiting...\n")
                 break
 
-            else:
-                # Lua chon khong hop le.
+            if choice not in ALGORITHMS:
                 print("[!] Invalid choice!")
+                continue
+
+            run_selected_algorithm(choice, k, password_data)
 
         except ValueError:
-            # Bat truong hop nguoi dung nhap khong phai so.
             print("[!] Please enter a valid number!")
 
 

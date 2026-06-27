@@ -43,6 +43,8 @@ def get_mutated_passwords(password_data):
 
 
 def normalize_candidates(candidates):
+    if candidates is None:
+        return ()
     if isinstance(candidates, str):
         return (candidates,)
     return tuple(candidates)
@@ -80,6 +82,7 @@ def rule_names(rule_ids):
 def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
     covered_passwords = mask_to_passwords(passwords, covered_mask)
     total_passwords = len(get_universe_passwords(passwords))
+    mutated_count = len(passwords.get("mutated", [])) if isinstance(passwords, dict) else 0
     return {
         "method": method_name,
         "k": k,
@@ -89,6 +92,7 @@ def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
         "covered_passwords": covered_passwords,
         "coverage_count": len(covered_passwords),
         "total_passwords": total_passwords,
+        "mutated_passwords": mutated_count,
     }
 
 
@@ -105,8 +109,12 @@ def save_answer(filename, result):
         f.write("Method:\n")
         f.write(f"{result['method']}\n")
 
-        f.write("\nFixed number of selected rules:\n")
+        f.write("\nFixed number of selected rules (k):\n")
         f.write(f"{result['k']}\n")
+
+        f.write("\nInput summary:\n")
+        f.write(f"Real passwords: {result['total_passwords']}\n")
+        f.write(f"Mutated passwords: {result['mutated_passwords']}\n")
 
         f.write("\nSelected rules:\n")
         if result["selected_rules"]:
@@ -262,6 +270,8 @@ def solve_math_model(passwords, k):
 def solve_dp(passwords, k):
     """
     Exact search co memoization.
+    Trang thai phai gom ca covered_mask vi gia tri cua rule tiep theo
+    phu thuoc vao cac password da duoc cover truoc do.
     """
     rule_masks = build_rule_masks(passwords)
     rule_ids = list(RULE_IDS)
@@ -271,21 +281,21 @@ def solve_dp(passwords, k):
         return result_payload("dynamic programming", k, [], passwords, 0)
 
     @lru_cache(maxsize=None)
-    def best_solution(start_index, remaining):
+    def best_solution(start_index, remaining, covered_mask):
         if remaining == 0:
-            return 0, ()
+            return covered_mask, ()
 
-        best_mask = 0
+        best_mask = covered_mask
         best_selected = ()
         last_start = len(rule_ids) - remaining + 1
         for index in range(start_index, last_start):
             rule_id = rule_ids[index]
-            rest_mask, rest_selected = best_solution(index + 1, remaining - 1)
-            candidate_mask = rule_masks[rule_id] | rest_mask
+            next_mask = covered_mask | rule_masks[rule_id]
+            candidate_mask, rest_selected = best_solution(index + 1, remaining - 1, next_mask)
             if candidate_mask.bit_count() > best_mask.bit_count() or not best_selected:
                 best_mask = candidate_mask
                 best_selected = (rule_id,) + rest_selected
         return best_mask, best_selected
 
-    covered_mask, selected_rules = best_solution(0, k)
+    covered_mask, selected_rules = best_solution(0, k, 0)
     return result_payload("dynamic programming", k, list(selected_rules), passwords, covered_mask)

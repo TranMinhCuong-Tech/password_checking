@@ -1,21 +1,41 @@
-def identity(password):
-    return password
+def identity_short(password):
+    if len(password) <= 6:
+        return password
+    return []
+
+
+def identity_medium(password):
+    if 7 <= len(password) <= 10:
+        return password
+    return []
+
+
+def identity_long(password):
+    if len(password) >= 11:
+        return password
+    return []
 
 
 def capitalize(password):
-    return password.capitalize()
+    candidate = password.capitalize()
+    if candidate == password:
+        return []
+    return candidate
 
 
 def uppercase_all(password):
-    return password.upper()
+    candidate = password.upper()
+    if candidate == password:
+        return []
+    return candidate
 
 
-def append_1(password):
-    return f"{password}1"
+def append_single_digit(password):
+    return [f"{password}{digit}" for digit in range(10)]
 
 
-def append_12(password):
-    return f"{password}12"
+def append_double_digit(password):
+    return [f"{password}{digit}{digit}" for digit in range(10)]
 
 
 def append_123(password):
@@ -26,8 +46,12 @@ def append_year(password):
     return [f"{password}{year}" for year in range(1990, 2031)]
 
 
-def prepend_1(password):
-    return f"1{password}"
+def append_special(password):
+    return [f"{password}{symbol}" for symbol in ("!", "@", "#", "$", "%")]
+
+
+def prepend_single_digit(password):
+    return [f"{digit}{password}" for digit in range(10)]
 
 
 def prepend_123(password):
@@ -35,27 +59,42 @@ def prepend_123(password):
 
 
 def reverse(password):
-    return password[::-1]
+    candidate = password[::-1]
+    if candidate == password:
+        return []
+    return candidate
 
 
 def leet_a4(password):
-    return password.replace("a", "4").replace("A", "4")
+    candidate = password.replace("a", "4").replace("A", "4")
+    if candidate == password:
+        return []
+    return candidate
 
 
 def leet_o0(password):
-    return password.replace("o", "0").replace("O", "0")
+    candidate = password.replace("o", "0").replace("O", "0")
+    if candidate == password:
+        return []
+    return candidate
 
 
 def leet_e3(password):
-    return password.replace("e", "3").replace("E", "3")
+    candidate = password.replace("e", "3").replace("E", "3")
+    if candidate == password:
+        return []
+    return candidate
 
 
 def leet_s_dollar(password):
-    return password.replace("s", "$").replace("S", "$")
+    candidate = password.replace("s", "$").replace("S", "$")
+    if candidate == password:
+        return []
+    return candidate
 
 
 def mixed_leet(password):
-    return (
+    candidate = (
         password.replace("a", "@")
         .replace("A", "@")
         .replace("o", "0")
@@ -67,50 +106,41 @@ def mixed_leet(password):
         .replace("s", "$")
         .replace("S", "$")
     )
+    if candidate == password:
+        return []
+    return candidate
 
 
 def keyboard_walk(password):
-    return f"{password}qwerty"
-
-
-def keyboard_walk_number(password):
-    return f"{password}qwerty123"
-
-
-def numeric_sequence(password):
-    return f"{password}123456"
-
-
-def repeated_digit(password):
-    return [f"{password}{digit}{digit}{digit}" for digit in range(10)]
+    return [f"{password}{walk}" for walk in ("qwerty", "asdf", "zxcv", "123qwe")]
 
 
 def duplicate_last_char(password):
     if not password:
-        return password
+        return []
     return f"{password}{password[-1]}"
 
 
 RULES = {
-    1: {"name": "identity", "label": "identity", "transform": identity},
-    2: {"name": "capitalize", "label": "capitalize", "transform": capitalize},
-    3: {"name": "uppercase_all", "label": "uppercase_all", "transform": uppercase_all},
-    4: {"name": "append_1", "label": "append_1", "transform": append_1},
-    5: {"name": "append_12", "label": "append_12", "transform": append_12},
-    6: {"name": "append_123", "label": "append_123", "transform": append_123},
-    7: {"name": "append_year", "label": "append_year", "transform": append_year},
-    8: {"name": "prepend_1", "label": "prepend_1", "transform": prepend_1},
-    9: {"name": "prepend_123", "label": "prepend_123", "transform": prepend_123},
-    10: {"name": "reverse", "label": "reverse", "transform": reverse},
-    11: {"name": "leet_a4", "label": "leet_a4", "transform": leet_a4},
-    12: {"name": "leet_o0", "label": "leet_o0", "transform": leet_o0},
-    13: {"name": "leet_e3", "label": "leet_e3", "transform": leet_e3},
-    14: {"name": "leet_s$", "label": "leet_s$", "transform": leet_s_dollar},
-    15: {"name": "mixed_leet", "label": "mixed_leet", "transform": mixed_leet},
-    16: {"name": "keyboard_walk", "label": "keyboard_walk", "transform": keyboard_walk},
-    17: {"name": "keyboard_walk_number", "label": "keyboard_walk_number", "transform": keyboard_walk_number},
-    18: {"name": "numeric_sequence", "label": "numeric_sequence", "transform": numeric_sequence},
-    19: {"name": "repeated_digit", "label": "repeated_digit", "transform": repeated_digit},
+    1: {"name": "identity_short", "label": "identity_short", "transform": identity_short},
+    2: {"name": "identity_medium", "label": "identity_medium", "transform": identity_medium},
+    3: {"name": "identity_long", "label": "identity_long", "transform": identity_long},
+    4: {"name": "capitalize", "label": "capitalize", "transform": capitalize},
+    5: {"name": "uppercase_all", "label": "uppercase_all", "transform": uppercase_all},
+    6: {"name": "append_single_digit", "label": "append_single_digit", "transform": append_single_digit},
+    7: {"name": "append_double_digit", "label": "append_double_digit", "transform": append_double_digit},
+    8: {"name": "append_123", "label": "append_123", "transform": append_123},
+    9: {"name": "append_year", "label": "append_year", "transform": append_year},
+    10: {"name": "append_special", "label": "append_special", "transform": append_special},
+    11: {"name": "prepend_single_digit", "label": "prepend_single_digit", "transform": prepend_single_digit},
+    12: {"name": "prepend_123", "label": "prepend_123", "transform": prepend_123},
+    13: {"name": "reverse", "label": "reverse", "transform": reverse},
+    14: {"name": "leet_a4", "label": "leet_a4", "transform": leet_a4},
+    15: {"name": "leet_o0", "label": "leet_o0", "transform": leet_o0},
+    16: {"name": "leet_e3", "label": "leet_e3", "transform": leet_e3},
+    17: {"name": "leet_s$", "label": "leet_s$", "transform": leet_s_dollar},
+    18: {"name": "mixed_leet", "label": "mixed_leet", "transform": mixed_leet},
+    19: {"name": "keyboard_walk", "label": "keyboard_walk", "transform": keyboard_walk},
     20: {"name": "duplicate_last_char", "label": "duplicate_last_char", "transform": duplicate_last_char},
 }
 
@@ -121,25 +151,3 @@ def printRuleCatalog():
     print("\nCandidate mutation rules:")
     for rule_id in RULE_IDS:
         print(f"    [{rule_id}] {RULES[rule_id]['label']}")
-
-
-def checkPassword(algorithm_module, k, password_files):
-    print(f"\n[+] Total candidate rules: {len(RULES)}")
-    print(f"[+] Number of rules to select: {k}")
-
-    try:
-        password_data = algorithm_module.load_passwords(password_files)
-    except AttributeError:
-        password_data = {}
-
-    real_count = len(password_data.get("real", [])) if isinstance(password_data, dict) else 0
-    mutated_count = len(password_data.get("mutated", [])) if isinstance(password_data, dict) else 0
-
-    if real_count == 0 or mutated_count == 0:
-        print("[!] No password data loaded. Returning...")
-        return None
-
-    print(f"[+] Loaded real passwords: {real_count}")
-    print(f"[+] Loaded mutated passwords: {mutated_count}")
-    print("[*] Solving Maximum Coverage...\n")
-    return algorithm_module.solve_max_coverage(k, password_data)
