@@ -40,7 +40,7 @@
 The goal is not just to check passwords. Instead, the project is designed to:
 
 - model a real problem as a combinatorial optimization problem
-- compare brute force, greedy, 0-1 integer linear programming, and dynamic programming approaches
+- compare greedy, randomized search, hill climbing, local search, beam search, dynamic programming, 0-1 integer linear programming, and Lagrangian relaxation approaches
 - show the difference between exact and approximate solutions
 - demonstrate why NP-Hard problems become expensive as the input size grows
 
@@ -137,25 +137,63 @@ Implementation-wise:
 
 ## Algorithms
 
-The project includes 4 solving strategies.
+The project includes 8 solving strategies, grouped by implementation and understanding difficulty.
 
-### 1. Brute Force
+### Easy
 
-Try every combination of exactly `k` rules.
-
-- exact solution
-- grows very fast with the number of rules
-- used as a baseline for comparison
-
-### 2. Greedy
+#### 1. Greedy
 
 At each step, choose the rule that covers the largest number of newly covered passwords.
 
-- faster than brute force
+- fast and easy to explain
 - does not always guarantee the optimal answer
 - a common approximation strategy for Maximum Coverage
 
-### 3. ILP_PuLP_CBC
+#### 2. Randomized Search
+
+Randomly sample many feasible `k`-rule subsets and keep the best one.
+
+- simple heuristic
+- easy to implement
+- useful as a baseline for stochastic exploration
+
+#### 3. Hill Climbing
+
+Start from a good initial solution and repeatedly apply the best improving swap.
+
+- local improvement strategy
+- easy to understand
+- can get stuck in local optima
+
+#### 4. Local Search
+
+Start from a random feasible solution and improve it using first-improvement swaps.
+
+- simple neighborhood search
+- good for demonstrating iterative improvement
+- usually slower than greedy but still practical for small inputs
+
+### Medium
+
+#### 5. Beam Search
+
+Expand multiple partial solutions at once and keep only the best `beam_width` candidates at each depth.
+
+- more flexible than greedy
+- easier than full exhaustive search
+- trades accuracy for a controlled search width
+
+#### 6. Dynamic Programming
+
+Use recursion with memoization to avoid recomputing repeated states.
+
+- exact solution
+- practical only for small instances because the state space grows quickly
+- a good example of state optimization
+
+### Hard
+
+#### 7. ILP + PuLP + CBC
 
 Formulate the problem as a 0-1 integer linear programming model and solve it with PuLP + CBC.
 
@@ -163,13 +201,13 @@ Formulate the problem as a 0-1 integer linear programming model and solve it wit
 - uses binary decision variables and linear coverage constraints
 - demonstrates how an optimization solver can handle Maximum Coverage directly
 
-### 4. Dynamic Programming
+#### 8. Lagrangian Relaxation
 
-Use recursion with memoization to avoid recomputing repeated states.
+Relax the cardinality constraint and tune a penalty multiplier iteratively.
 
-- exact solution
-- can be better than plain brute force in repeated subproblems
-- a good example of state optimization
+- advanced optimization idea
+- useful for explaining penalty-based approximation
+- practical heuristic for this project
 
 ## Folder Structure
 
@@ -188,10 +226,15 @@ Use recursion with memoization to avoid recomputing repeated states.
 ├── mutated_passwords_1500.txt
 ├── output_*.txt
 └── algorithms
-    ├── Brute_Force.py
+    ├── Beam_Search.py
     ├── Dynamic_Programming.py
     ├── Greedy.py
-    └── ILP_PuLP_CBC.py
+    ├── Hill_Climbing.py
+    ├── ILP_PuLP_CBC.py
+    ├── Lagrangian_Relaxation.py
+    ├── Local_Search.py
+    ├── Randomized_Search.py
+    └── __init__.py
 ```
 
 ## How to Run
@@ -305,10 +348,14 @@ Program flow:
 
 #### Algorithm Menu
 
-- `1`: Brute Force
-- `2`: Greedy
-- `3`: ILP_PuLP_CBC
-- `4`: Dynamic Programming
+- `1`: Greedy
+- `2`: Randomized Search
+- `3`: Hill Climbing
+- `4`: Local Search
+- `5`: Beam Search
+- `6`: Dynamic Programming
+- `7`: ILP + PuLP + CBC
+- `8`: Lagrangian Relaxation
 - `0`: return to the previous menu
 - `-1` or `e`: exit the program
 
@@ -316,10 +363,14 @@ Program flow:
 
 Each solver writes its result to a separate output file, for example:
 
-- `output_brute_k5.txt`
 - `output_greedy_k3.txt`
-- `output_ILP_PuLP_CBC_k10.txt`
+- `output_randomized_k4.txt`
+- `output_hill_k4.txt`
+- `output_local_k4.txt`
+- `output_beam_k4.txt`
 - `output_dp_k7.txt`
+- `output_ILP_PuLP_CBC_k10.txt`
+- `output_lagrangian_k10.txt`
 
 The output usually includes:
 

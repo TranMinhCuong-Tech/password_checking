@@ -2,7 +2,16 @@ REAL_PASSWORD_FILE = "real_passwords.txt"
 MUTATED_PASSWORD_FILE = "mutated_passwords.txt"
 PASSWORD_FILES = (REAL_PASSWORD_FILE, MUTATED_PASSWORD_FILE)
 
+try:
+    from . import pwd_checking
+    from . import rules
+except ImportError:
+    import pwd_checking
+    import rules
 
+
+# This file is the entry point of the project.
+# It shows the banner, asks for k, and then hands control to pwd_checking.py.
 def showBanner():
     banner = """
                 ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗ 
@@ -21,42 +30,37 @@ def showBanner():
     """
     print(banner)
 
-    description = """
-    Universe:
-        - real_passwords.txt: original password dataset
-        - mutated_passwords.txt: transformed password dataset
-
-    Goal:
-        Select exactly k rules from rules.py so the covered passwords are maximized.
-    """
-    print(description)
+    print("    Input files:")
+    print(f"        - Real passwords    : {REAL_PASSWORD_FILE}")
+    print(f"        - Mutated passwords : {MUTATED_PASSWORD_FILE}")
+    print("\n    Goal:")
+    print("        Choose exactly k mutation rules that cover the most real passwords.")
 
 
 def prompt_k():
-    print("\n[+] Choose a fixed number of rules before selecting an algorithm.")
+    # Ask the user how many rules should be selected.
+    max_rules = len(rules.RULES)
+    print("\n[+] Choose fixed number of rules before selecting an algorithm.")
+
     while True:
         try:
-            k_raw = input(f"[+] Enter number of rules k (1-{len(rules.RULES)}): ").strip().lower()
-            if int(k_raw) == 0:
+            k_raw = input(f"[+] Enter number of rules k (1-{max_rules}, 0 to exit): ").strip().lower()
+            k = int(k_raw)
+            if k == 0:
                 return "exit"
 
-            k = int(k_raw)
-            if 1 <= k <= len(rules.RULES):
+            if 1 <= k <= max_rules:
                 return k
-            print(f"[!] Please enter a number between 1 and {len(rules.RULES)}.")
+            print(f"[!] Please enter a number between 1 and {max_rules}.")
         except ValueError:
             print("[!] Please enter a valid number.")
 
 
-try:
-    from . import pwd_checking
-    from . import rules
-except ImportError:
-    import pwd_checking
-    import rules
-
-
-if __name__ == "__main__":
+def main():
+    # Main loop:
+    # 1) show the rule catalog
+    # 2) ask for k
+    # 3) let the user choose one algorithm
     showBanner()
     while True:
         rules.printRuleCatalog()
@@ -69,3 +73,7 @@ if __name__ == "__main__":
         result = pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
         if result == "exit":
             break
+
+
+if __name__ == "__main__":
+    main()

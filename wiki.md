@@ -123,30 +123,7 @@ Khi bài toán là NP-Hard, thuật toán thường được chia thành 3 kiể
 
 ### 5. Lý thuyết từng thuật toán trong `algorithms/`
 
-#### 5.1. Brute Force
-
-Ý tưởng:
-
-- thử mọi tổ hợp gồm đúng `k` rules
-- tính coverage của từng tổ hợp
-- lấy tổ hợp có coverage lớn nhất
-
-Tính chất:
-
-- chính xác tuyệt đối
-- chi phí tăng rất nhanh theo số lượng rules
-
-Độ phức tạp:
-
-- số tổ hợp là `C(m, k)` với `m` là số rules
-- với mỗi tổ hợp, cần tính hợp của các tập
-
-Ví dụ:
-
-- có 20 rules, chọn 5
-- số tổ hợp là `C(20,5) = 15504`
-
-#### 5.2. Greedy
+#### 5.1. Greedy
 
 Ý tưởng:
 
@@ -156,15 +133,80 @@ Ví dụ:
 Tính chất:
 
 - rất phổ biến với Maximum Coverage
-- nhanh hơn brute force rất nhiều
+- nhanh và dễ cài đặt
 - không luôn cho nghiệm tối ưu tuyệt đối
 
-Ví dụ:
+#### 5.2. Randomized Search
 
-- ban đầu chọn rule phủ 100 phần tử
-- ở bước sau, chọn rule phủ thêm 40 phần tử mới thay vì rule khác phủ thêm 35
+Ý tưởng:
 
-#### 5.3. ILP_PuLP_CBC
+- sinh ngẫu nhiên nhiều tập `k` rules khả thi
+- tính coverage của từng tập
+- giữ lại nghiệm tốt nhất
+
+Tính chất:
+
+- đơn giản để cài đặt
+- phù hợp làm baseline ngẫu nhiên
+- chất lượng phụ thuộc vào số lần lấy mẫu
+
+#### 5.3. Hill Climbing
+
+Ý tưởng:
+
+- bắt đầu từ một nghiệm tốt ban đầu
+- thử các phép đổi `1-swap`
+- chỉ chấp nhận bước đi cải thiện tốt nhất
+
+Tính chất:
+
+- dễ hiểu ở mức local search
+- thường tốt hơn một lần greedy đơn lẻ
+- có thể kẹt ở cực trị cục bộ
+
+#### 5.4. Local Search
+
+Ý tưởng:
+
+- bắt đầu từ một nghiệm ngẫu nhiên hợp lệ
+- duyệt lân cận theo kiểu first-improvement
+- dừng khi không còn bước cải thiện
+
+Tính chất:
+
+- minh họa rõ ý tưởng tối ưu cục bộ
+- cài đặt không quá phức tạp
+- phụ thuộc nhiều vào nghiệm khởi tạo
+
+#### 5.5. Beam Search
+
+Ý tưởng:
+
+- mở rộng nhiều nghiệm con song song
+- ở mỗi tầng chỉ giữ lại `beam_width` nghiệm tốt nhất
+- lặp đến khi chọn đủ `k` rules
+
+Tính chất:
+
+- cân bằng giữa greedy và tìm kiếm rộng
+- dễ giải thích hơn các kỹ thuật tối ưu nâng cao
+- chất lượng phụ thuộc vào độ rộng beam
+
+#### 5.6. Dynamic Programming
+
+Ý tưởng:
+
+- chia bài toán thành các trạng thái nhỏ hơn
+- dùng memoization để lưu kết quả trung gian
+- tránh tính lại cùng một trạng thái nhiều lần
+
+Tính chất:
+
+- chính xác
+- hiệu quả hơn brute force trong các trường hợp có trạng thái lặp
+- chỉ thực tế khi kích thước trạng thái còn nhỏ
+
+#### 5.7. ILP + PuLP + CBC
 
 Ý tưởng:
 
@@ -179,31 +221,21 @@ Tính chất:
 - đúng với cách mô hình toán được viết trong lý thuyết tối ưu
 - dùng bitmask chỉ để dựng hệ số `a_ij` và tính coverage sau khi có nghiệm
 
-Ví dụ:
-
-- nếu rule `i` được chọn thì `x_i = 1`
-- nếu password thứ 3 được phủ thì `y_3 = 1`
-- các ràng buộc đảm bảo một password chỉ được tính là phủ khi ít nhất một rule đã chọn sinh ra nó
-
-#### 5.4. Dynamic Programming
+#### 5.8. Lagrangian Relaxation
 
 Ý tưởng:
 
-- chia bài toán thành các trạng thái nhỏ hơn
-- dùng memoization để lưu kết quả trung gian
-- tránh tính lại cùng một trạng thái nhiều lần
+- nới lỏng ràng buộc số lượng rule bằng một hệ số phạt
+- tối ưu lặp lại với các giá trị penalty khác nhau
+- lấy nghiệm khả thi tốt nhất sau khi điều chỉnh
 
 Tính chất:
 
-- chính xác
-- hiệu quả hơn brute force trong các trường hợp có trạng thái lặp
+- là một hướng tối ưu hóa nâng cao
+- phù hợp để minh họa penalty-based optimization
+- trong project này đóng vai trò heuristic thực dụng
 
-Ví dụ:
-
-- nếu đã xét từ rule thứ `i` với `remaining = 2`
-- kết quả của trạng thái đó có thể được dùng lại nhiều lần khi truy hồi
-
-#### 5.5. Bitmask trong project
+#### 5.9. Bitmask trong project
 
 Bitmask là cách biểu diễn tập con bằng số nhị phân.
 
@@ -257,10 +289,10 @@ Chức năng:
 
 Chức năng:
 
-- in menu Brute Force / Greedy / ILP_PuLP_CBC / Dynamic Programming
+- in menu Greedy / Randomized Search / Hill Climbing / Local Search / Beam Search / Dynamic Programming / ILP + PuLP + CBC / Lagrangian Relaxation
 - nhận lựa chọn từ người dùng
 - gọi đúng module thuật toán tương ứng
-- xử lý các phím điều hướng như `0`, `-1`, `e`
+- xử lý các phím điều hướng như `0`, `-1`
 
 #### `rules.py`
 
@@ -284,20 +316,15 @@ Chức năng:
 - tính coverage
 - định dạng kết quả
 - lưu output ra file
-- cài đặt 4 solver:
-  - brute force
+- cài đặt 8 solver:
   - greedy
-  - ILP_PuLP_CBC
+  - randomized search
+  - hill climbing
+  - local search
+  - beam search
   - dynamic programming
-
-#### `algorithms/Brute_Force.py`
-
-Wrapper cho giải pháp brute force.
-
-Chức năng:
-
-- gọi `solve_bruteforce()`
-- đặt tên output là `output_brute`
+  - ILP + PuLP + CBC
+  - Lagrangian relaxation
 
 #### `algorithms/Greedy.py`
 
@@ -308,6 +335,42 @@ Chức năng:
 - gọi `solve_greedy()`
 - đặt tên output là `output_greedy`
 
+#### `algorithms/Randomized_Search.py`
+
+Wrapper cho giải pháp randomized search.
+
+Chức năng:
+
+- gọi `solve_randomized_search()`
+- đặt tên output là `output_randomized`
+
+#### `algorithms/Hill_Climbing.py`
+
+Wrapper cho giải pháp hill climbing.
+
+Chức năng:
+
+- gọi `solve_hill_climbing()`
+- đặt tên output là `output_hill`
+
+#### `algorithms/Local_Search.py`
+
+Wrapper cho giải pháp local search.
+
+Chức năng:
+
+- gọi `solve_local_search()`
+- đặt tên output là `output_local`
+
+#### `algorithms/Beam_Search.py`
+
+Wrapper cho giải pháp beam search.
+
+Chức năng:
+
+- gọi `solve_beam_search()`
+- đặt tên output là `output_beam`
+
 #### `algorithms/ILP_PuLP_CBC.py`
 
 Wrapper cho giải pháp ILP exact dùng PuLP + CBC.
@@ -316,6 +379,15 @@ Chức năng:
 
 - gọi `solve_ilp_pulp_cbc()`
 - đặt tên output là `output_ILP_PuLP_CBC`
+
+#### `algorithms/Lagrangian_Relaxation.py`
+
+Wrapper cho giải pháp Lagrangian relaxation.
+
+Chức năng:
+
+- gọi `solve_lagrangian_relaxation()`
+- đặt tên output là `output_lagrangian`
 
 #### `algorithms/Dynamic_Programming.py`
 
@@ -459,10 +531,14 @@ Các lựa chọn thường gặp:
 
 Menu thuật toán cho phép chọn:
 
-- `1` Brute Force
-- `2` Greedy
-- `3` ILP_PuLP_CBC
-- `4` Dynamic Programming
+- `1` Greedy
+- `2` Randomized Search
+- `3` Hill Climbing
+- `4` Local Search
+- `5` Beam Search
+- `6` Dynamic Programming
+- `7` ILP + PuLP + CBC
+- `8` Lagrangian Relaxation
 - `0` quay lại menu trước
 - `-1` hoặc `e` thoát chương trình
 
@@ -504,5 +580,5 @@ Nếu bạn muốn dùng wiki này cho báo cáo, nên viết thêm:
 
 - độ phức tạp Big-O của từng thuật toán
 - ví dụ cụ thể với bảng tập hợp
-- nhận xét vì sao greedy là xấp xỉ, còn brute force/DP là exact
+- nhận xét vì sao greedy, randomized search, hill climbing, local search, beam search là heuristic; còn DP, ILP là exact
 - kết luận về NP-Hard trong project

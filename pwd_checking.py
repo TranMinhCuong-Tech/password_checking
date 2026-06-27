@@ -1,80 +1,122 @@
 try:
     from . import rules
-    from .algorithms import Brute_Force as brute_force
-    from .algorithms import Greedy as greedy
-    from .algorithms import ILP_PuLP_CBC as ilp_pulp_cbc
+    from .algorithms import Beam_Search as beam_search
     from .algorithms import Dynamic_Programming as dynamic_programming
+    from .algorithms import Greedy as greedy
+    from .algorithms import Hill_Climbing as hill_climbing
+    from .algorithms import ILP_PuLP_CBC as ilp_pulp_cbc
+    from .algorithms import Lagrangian_Relaxation as lagrangian_relaxation
+    from .algorithms import Local_Search as local_search
+    from .algorithms import Randomized_Search as randomized_search
+    from .coverage_problem import load_passwords
 except ImportError:
     import rules
-    import algorithms.Brute_Force as brute_force
-    import algorithms.Greedy as greedy
-    import algorithms.ILP_PuLP_CBC as ilp_pulp_cbc
+    import algorithms.Beam_Search as beam_search
     import algorithms.Dynamic_Programming as dynamic_programming
+    import algorithms.Greedy as greedy
+    import algorithms.Hill_Climbing as hill_climbing
+    from coverage_problem import load_passwords
+    import algorithms.ILP_PuLP_CBC as ilp_pulp_cbc
+    import algorithms.Lagrangian_Relaxation as lagrangian_relaxation
+    import algorithms.Local_Search as local_search
+    import algorithms.Randomized_Search as randomized_search
+
+
+# This module is the algorithm menu controller.
+# It does not solve the problem itself.
+# It only:
+# - loads the input data
+# - shows the solver menu
+# - forwards the user's choice to the correct solver module
+ALGORITHMS = {
+    1: ("Greedy", greedy),
+    2: ("Randomized Search", randomized_search),
+    3: ("Hill Climbing", hill_climbing),
+    4: ("Local Search", local_search),
+    5: ("Beam Search", beam_search),
+    6: ("Dynamic Programming", dynamic_programming),
+    7: ("ILP + PuLP + CBC", ilp_pulp_cbc),
+    8: ("Lagrangian Relaxation", lagrangian_relaxation),
+}
 
 
 def printMenuAlgorithms():
-    # chon thuat toan de giai quyet
+    # Keep the menu text in one place so it is easy to update.
     menu = """
-    [1] Brute Force
-    [2] Greedy
-    [3] ILP_PuLP_CBC (PuLP + CBC)
-    [4] Dynamic Programming
+    [1] Greedy
+    [2] Randomized Search
+    [3] Hill Climbing
+    [4] Local Search
+    [5] Beam Search
+    [6] Dynamic Programming
+    [7] ILP + PuLP + CBC
+    [8] Lagrangian Relaxation
     [0] Return to the previous menu
     [-1] Exit
     """
     print(menu)
 
 
+def load_password_data(password_files):
+    # Load both password files before the user selects an algorithm.
+    password_data = load_passwords(password_files)
+    real_count = len(password_data.get("real", []))
+    mutated_count = len(password_data.get("mutated", []))
+
+    print(f"[+] Loaded real passwords    : {real_count}")
+    print(f"[+] Loaded mutated passwords : {mutated_count}")
+
+    if real_count == 0 or mutated_count == 0:
+        print("[!] Missing password data. Please check input files.")
+        return None
+
+    return password_data
+
+
+def run_selected_algorithm(choice, k, password_data):
+    # Map menu choice -> solver module.
+    algorithm_name, algorithm_module = ALGORITHMS[choice]
+    print(f"[*] Running {algorithm_name} with k = {k}...\n")
+    return algorithm_module.solve_max_coverage(k, password_data)
+
+
 def runAlgorithms(k, password_files):
-    # vong lap cua giao dien chinh
+    # This loop keeps asking until the user exits or goes back.
+    password_data = load_password_data(password_files)
+    if password_data is None:
+        return
+
+    print(f"[+] Total candidate rules    : {len(rules.RULES)}")
+    print(f"[+] Fixed selected rules k   : {k}")
+
     while True:
         try:
             printMenuAlgorithms()
             choice_raw = input("\n[+] Enter your choice: ").strip().lower()
 
             if choice_raw == "e":
-                # Thoat chuong trinh.
+                # Support typing "e" as a quick exit.
                 print("[*] Exiting...\n")
                 return "exit"
 
             choice = int(choice_raw)
 
-            if choice == 1:
-                # thuat toan vet can
-                print("[*] Running Brute Force...\n")
-                rules.checkPassword(brute_force, k, password_files)
-
-            elif choice == 2:
-                # thuat toan tham lam.
-                print("[*] Running Greedy...\n")
-                rules.checkPassword(greedy, k, password_files)
-
-            elif choice == 3:
-                # Exact ILP model solved by PuLP and CBC.
-                print("[*] Running ILP_PuLP_CBC (PuLP + CBC)...\n")
-                rules.checkPassword(ilp_pulp_cbc, k, password_files)
-
-            elif choice == 4:
-                # Memoized exact search.
-                print("[*] Running Dynamic Programming...\n")
-                rules.checkPassword(dynamic_programming, k, password_files)
-
-            elif choice == 0:
-                # Quay ve menu truoc.
+            if choice == 0:
+                # Go back to the previous menu in __init__.py.
                 print("[*] Returning to the previous menu...\n")
                 return "back"
 
-            elif choice == -1:
-                # Thoat chuong trinh.
+            if choice == -1:
                 print("[*] Exiting...\n")
                 return "exit"
 
-            else:
-                # Lua chon khong hop le.
+            if choice not in ALGORITHMS:
                 print("[!] Invalid choice!")
+                continue
+
+            run_selected_algorithm(choice, k, password_data)
 
         except ValueError:
-            # Bat truong hop nguoi dung nhap khong phai so.
             print("[!] Please enter a valid number!")
 
 

@@ -6,7 +6,7 @@ except ImportError:
 
 def solve_max_coverage(k, passwords):
     # Solve the Maximum Coverage ILP with PuLP and CBC.
-    return run_solver("ILP_PuLP_CBC", solve_ilp_pulp_cbc, k, passwords, "output_ILP_PuLP_CBC")
+    return run_solver("ILP + PuLP + CBC", solve_ilp_pulp_cbc, k, passwords, "output_ILP_PuLP_CBC")
 
 
 def check_password(k, passwords=None):
