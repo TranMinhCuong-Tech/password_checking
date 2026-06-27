@@ -8,6 +8,10 @@ try:
 except ImportError:
     import pwd_checking
     import rules
+<<<<<<< HEAD
+=======
+
+>>>>>>> 30a8b8fd0e6fbf6277d0085b7730970b7b55067c
 
 
 # This file is the entry point of the project.
@@ -38,7 +42,10 @@ def showBanner():
 
 
 def prompt_k():
+<<<<<<< HEAD
     # Ask the user how many rules should be selected.
+=======
+>>>>>>> 30a8b8fd0e6fbf6277d0085b7730970b7b55067c
     max_rules = len(rules.RULES)
     print("\n[+] Choose fixed number of rules before selecting an algorithm.")
 
@@ -57,10 +64,13 @@ def prompt_k():
 
 
 def main():
+<<<<<<< HEAD
     # Main loop:
     # 1) show the rule catalog
     # 2) ask for k
     # 3) let the user choose one algorithm
+=======
+>>>>>>> 30a8b8fd0e6fbf6277d0085b7730970b7b55067c
     showBanner()
     while True:
         rules.printRuleCatalog()
