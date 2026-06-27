@@ -127,7 +127,6 @@ def rule_names(rule_ids):
     return [f"[{rule_id}] {RULES[rule_id]['label']}" for rule_id in rule_ids]
 
 
-<<<<<<< HEAD
 def result_payload(method_name, k, selected_rule_ids, passwords, covered_indices):
     # Normalize everything into a single return object so every solver
     # produces the same output format.
@@ -136,12 +135,6 @@ def result_payload(method_name, k, selected_rule_ids, passwords, covered_indices
     total_passwords = len(real_passwords)
     mutated_count = len(passwords.get("mutated", [])) if isinstance(passwords, dict) else 0
     covered_set = frozenset(covered_indices)
-=======
-def result_payload(method_name, k, selected_rule_ids, passwords, covered_mask):
-    covered_passwords = mask_to_passwords(passwords, covered_mask)
-    total_passwords = len(get_universe_passwords(passwords))
-    mutated_count = len(passwords.get("mutated", [])) if isinstance(passwords, dict) else 0
->>>>>>> 30a8b8fd0e6fbf6277d0085b7730970b7b55067c
     return {
         "method": method_name,
         "k": k,
@@ -668,14 +661,8 @@ def solve_ilp_pulp_cbc(passwords, k):
 
 def solve_lagrangian_relaxation(passwords, k, iterations=None):
     """
-<<<<<<< HEAD
     Lagrangian relaxation with a simple subgradient-style penalty update.
     This is a practical heuristic for the project.
-=======
-    Exact search co memoization.
-    Trang thai phai gom ca covered_mask vi gia tri cua rule tiep theo
-    phu thuoc vao cac password da duoc cover truoc do.
->>>>>>> 30a8b8fd0e6fbf6277d0085b7730970b7b55067c
     """
     # We relax the "choose exactly k rules" constraint by adding a penalty term.
     # Then we repeatedly update the penalty to move the solution closer to k.
@@ -686,7 +673,6 @@ def solve_lagrangian_relaxation(passwords, k, iterations=None):
     if k == 0 or not real_passwords:
         return result_payload("lagrangian relaxation", k, [], passwords, frozenset())
 
-<<<<<<< HEAD
     if iterations is None:
         iterations = max(12, len(rule_ids) * 2)
 
@@ -763,24 +749,3 @@ def solve_lagrangian_relaxation(passwords, k, iterations=None):
         passwords,
         best_coverage,
     )
-=======
-    @lru_cache(maxsize=None)
-    def best_solution(start_index, remaining, covered_mask):
-        if remaining == 0:
-            return covered_mask, ()
-
-        best_mask = covered_mask
-        best_selected = ()
-        last_start = len(rule_ids) - remaining + 1
-        for index in range(start_index, last_start):
-            rule_id = rule_ids[index]
-            next_mask = covered_mask | rule_masks[rule_id]
-            candidate_mask, rest_selected = best_solution(index + 1, remaining - 1, next_mask)
-            if candidate_mask.bit_count() > best_mask.bit_count() or not best_selected:
-                best_mask = candidate_mask
-                best_selected = (rule_id,) + rest_selected
-        return best_mask, best_selected
-
-    covered_mask, selected_rules = best_solution(0, k, 0)
-    return result_payload("dynamic programming", k, list(selected_rules), passwords, covered_mask)
->>>>>>> 30a8b8fd0e6fbf6277d0085b7730970b7b55067c
