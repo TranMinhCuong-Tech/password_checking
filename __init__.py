@@ -12,9 +12,19 @@ except ImportError:
 
 def showBanner():
     banner = """
-    ==========================================
-       PASSWORD CHECKING MAXIMUM COVERAGE
-    ==========================================
+                ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗ 
+                ██╔══██╗██╔══██╗██╔════╝██╔════╝██║    ██║██╔═══██╗██╔══██╗██╔══██╗
+                ██████╔╝███████║███████╗███████╗██║ █╗ ██║██║   ██║██████╔╝██║  ██║
+                ██╔═══╝ ██╔══██║╚════██║╚════██║██║███╗██║██║   ██║██╔══██╗██║  ██║
+                ██║     ██║  ██║███████║███████║╚███╔███╔╝╚██████╔╝██║  ██║██████╔╝
+                ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
+                                                                                
+                 ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗██╗███╗   ██╗ ██████╗      
+                ██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝██║████╗  ██║██╔════╝      
+                ██║     ███████║█████╗  ██║     █████╔╝ ██║██╔██╗ ██║██║  ███╗     
+                ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ ██║██║╚██╗██║██║   ██║     
+                ╚██████╗██║  ██║███████╗╚██████╗██║  ██╗██║██║ ╚████║╚██████╔╝     
+                 ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝                             
     """
     print(banner)
 
@@ -31,7 +41,11 @@ def prompt_k():
 
     while True:
         try:
-            k = int(input(f"[+] Enter k (1-{max_rules}): "))
+            k_raw = input(f"[+] Enter number of rules k (1-{max_rules}, 0 to exit): ").strip().lower()
+            k = int(k_raw)
+            if k == 0:
+                return "exit"
+
             if 1 <= k <= max_rules:
                 return k
             print(f"[!] Please enter a number between 1 and {max_rules}.")
@@ -41,12 +55,17 @@ def prompt_k():
 
 def main():
     showBanner()
-    rules.printRuleCatalog()
-    selected_k = prompt_k()
-
-    print(f"\n[+] Fixed k: {selected_k}")
-    print("[+] Select an algorithm to solve Maximum Coverage.")
-    pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+    while True:
+        rules.printRuleCatalog()
+        selected_k = prompt_k()
+        if selected_k == "exit":
+            print("[*] Exiting...\n")
+            break
+        print(f"\n[+] Fixed number of selected rules: {selected_k}")
+        print("[+] Now choose an algorithm to find the best coverage.")
+        result = pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
+        if result == "exit":
+            break
 
 
 if __name__ == "__main__":

@@ -151,3 +151,26 @@ def printRuleCatalog():
     print("\nCandidate mutation rules:")
     for rule_id in RULE_IDS:
         print(f"    [{rule_id}] {RULES[rule_id]['label']}")
+    print("    [0] Exit")
+
+
+def checkPassword(algorithm_module, k, password_files):
+    print(f"\n[+] Total candidate rules: {len(RULES)}")
+    print(f"[+] Number of rules to select: {k}")
+
+    try:
+        password_data = algorithm_module.load_passwords(password_files)
+    except AttributeError:
+        password_data = {}
+
+    real_count = len(password_data.get("real", [])) if isinstance(password_data, dict) else 0
+    mutated_count = len(password_data.get("mutated", [])) if isinstance(password_data, dict) else 0
+
+    if real_count == 0 or mutated_count == 0:
+        print("[!] No password data loaded. Returning...")
+        return None
+
+    print(f"[+] Loaded real passwords: {real_count}")
+    print(f"[+] Loaded mutated passwords: {mutated_count}")
+    print("[*] Solving Maximum Coverage...\n")
+    return algorithm_module.solve_max_coverage(k, password_data)

@@ -3,21 +3,21 @@ try:
     from .algorithms import Brute_Force as brute_force
     from .algorithms import Dynamic_Programming as dynamic_programming
     from .algorithms import Greedy as greedy
-    from .algorithms import Math_Model as math_model
+    from .algorithms import ILP_PuLP_CBC as ilp_pulp_cbc
     from .coverage_problem import load_passwords
 except ImportError:
     import rules
     import algorithms.Brute_Force as brute_force
     import algorithms.Dynamic_Programming as dynamic_programming
     import algorithms.Greedy as greedy
-    import algorithms.Math_Model as math_model
     from coverage_problem import load_passwords
+    import algorithms.ILP_PuLP_CBC as ilp_pulp_cbc
 
 
 ALGORITHMS = {
     1: ("Brute Force", brute_force),
     2: ("Greedy", greedy),
-    3: ("Math Model", math_model),
+    3: ("ILP_PuLP_CBC", ilp_pulp_cbc),
     4: ("Dynamic Programming", dynamic_programming),
 }
 
@@ -26,9 +26,10 @@ def printMenuAlgorithms():
     menu = """
     [1] Brute Force
     [2] Greedy
-    [3] Math Model
+    [3] ILP_PuLP_CBC (PuLP + CBC)
     [4] Dynamic Programming
-    [0] Exit
+    [0] Return to the previous menu
+    [-1] Exit
     """
     print(menu)
 
@@ -65,11 +66,24 @@ def runAlgorithms(k, password_files):
     while True:
         try:
             printMenuAlgorithms()
-            choice = int(input("\n[+] Enter your choice: "))
+            choice_raw = input("\n[+] Enter your choice: ").strip().lower()
+
+            if choice_raw == "e":
+                # Thoat chuong trinh.
+                print("[*] Exiting...\n")
+                return "exit"
+
+            choice = int(choice_raw)
 
             if choice == 0:
+                # Quay ve menu truoc.
+                print("[*] Returning to the previous menu...\n")
+                return "back"
+
+            elif choice == -1:
+                # Thoat chuong trinh.
                 print("[*] Exiting...\n")
-                break
+                return "exit"
 
             if choice not in ALGORITHMS:
                 print("[!] Invalid choice!")
