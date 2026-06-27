@@ -10,8 +10,11 @@ except ImportError:
     import rules
 
 
-# This file is the entry point of the project.
-# It shows the banner, asks for k, and then hands control to pwd_checking.py.
+# File nay la diem vao cua du an.
+# No hien thi banner, hoi k, roi chuyen quyen dieu khien sang pwd_checking.py.
+# Ham ben duoi deu co comment mo ta chuc nang cua tung ham.
+
+# Ham showBanner: in banner va thong tin dau vao cua chuong trinh.
 def showBanner():
     banner = """
                 ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗ 
@@ -30,46 +33,46 @@ def showBanner():
     """
     print(banner)
 
-    print("    Input files:")
-    print(f"        - Real passwords    : {REAL_PASSWORD_FILE}")
-    print(f"        - Mutated passwords : {MUTATED_PASSWORD_FILE}")
-    print("\n    Goal:")
-    print("        Choose exactly k mutation rules that cover the most real passwords.")
+    print("    File dau vao:")
+    print(f"        - Mat khau that    : {REAL_PASSWORD_FILE}")
+    print(f"        - Mat khau bien doi: {MUTATED_PASSWORD_FILE}")
+    print("\n    Muc tieu:")
+    print("        Chon dung k luat bien doi de phu duoc nhieu mat khau that nhat.")
 
-
+# Ham prompt_k: hoi nguoi dung nhap so luat can chon.
 def prompt_k():
-    # Ask the user how many rules should be selected.
+    # Hoi nguoi dung can chon bao nhieu luat.
     max_rules = len(rules.RULES)
-    print("\n[+] Choose fixed number of rules before selecting an algorithm.")
+    print("\n[+] Hay chon so luat co dinh truoc khi chon thuat toan.")
 
     while True:
         try:
-            k_raw = input(f"[+] Enter number of rules k (1-{max_rules}, 0 to exit): ").strip().lower()
+            k_raw = input(f"[+] Nhap so luat k (1-{max_rules}, 0 de thoat): ").strip().lower()
             k = int(k_raw)
             if k == 0:
                 return "exit"
 
             if 1 <= k <= max_rules:
                 return k
-            print(f"[!] Please enter a number between 1 and {max_rules}.")
+            print(f"[!] Vui long nhap so trong khoang 1 den {max_rules}.")
         except ValueError:
-            print("[!] Please enter a valid number.")
+            print("[!] Vui long nhap mot so hop le.")
 
-
+# Ham main: dieu khien luong chay chinh cua chuong trinh.
 def main():
-    # Main loop:
-    # 1) show the rule catalog
-    # 2) ask for k
-    # 3) let the user choose one algorithm
+    # Vong lap chinh:
+    # 1) hien thi danh muc luat
+    # 2) hoi gia tri k
+    # 3) cho nguoi dung chon mot thuat toan
     showBanner()
     while True:
         rules.printRuleCatalog()
         selected_k = prompt_k()
         if selected_k == "exit":
-            print("[*] Exiting...\n")
+            print("[*] Dang thoat...\n")
             break
-        print(f"\n[+] Fixed number of selected rules: {selected_k}")
-        print("[+] Now choose an algorithm to find the best coverage.")
+        print(f"\n[+] So luat da chon co dinh: {selected_k}")
+        print("[+] Bay gio hay chon mot thuat toan de tim do phu tot nhat.")
         result = pwd_checking.runAlgorithms(selected_k, PASSWORD_FILES)
         if result == "exit":
             break

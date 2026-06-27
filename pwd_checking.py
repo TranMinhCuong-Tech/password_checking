@@ -22,12 +22,12 @@ except ImportError:
     import algorithms.Randomized_Search as randomized_search
 
 
-# This module is the algorithm menu controller.
-# It does not solve the problem itself.
-# It only:
-# - loads the input data
-# - shows the solver menu
-# - forwards the user's choice to the correct solver module
+# Module nay la bo dieu khien menu thuat toan.
+# Ban than no khong giai bai toan.
+# No chi:
+# - tai du lieu dau vao
+# - hien thi menu bo giai
+# - chuyen lua chon cua nguoi dung sang module phu hop
 ALGORITHMS = {
     1: ("Greedy", greedy),
     2: ("Randomized Search", randomized_search),
@@ -39,9 +39,9 @@ ALGORITHMS = {
     8: ("Lagrangian Relaxation", lagrangian_relaxation),
 }
 
-
+# Ham printMenuAlgorithms: in menu lua chon cac thuat toan.
 def printMenuAlgorithms():
-    # Keep the menu text in one place so it is easy to update.
+    # Giu van ban menu o mot noi de de cap nhat.
     menu = """
     [1] Greedy
     [2] Randomized Search
@@ -56,68 +56,68 @@ def printMenuAlgorithms():
     """
     print(menu)
 
-
+# Ham load_password_data: tai du lieu mat khau va kiem tra tinh hop le.
 def load_password_data(password_files):
-    # Load both password files before the user selects an algorithm.
+    # Tai ca hai file mat khau truoc khi nguoi dung chon thuat toan.
     password_data = load_passwords(password_files)
     real_count = len(password_data.get("real", []))
     mutated_count = len(password_data.get("mutated", []))
 
-    print(f"[+] Loaded real passwords    : {real_count}")
-    print(f"[+] Loaded mutated passwords : {mutated_count}")
+    print(f"[+] Da tai mat khau that    : {real_count}")
+    print(f"[+] Da tai mat khau bien doi : {mutated_count}")
 
     if real_count == 0 or mutated_count == 0:
-        print("[!] Missing password data. Please check input files.")
+        print("[!] Thieu du lieu mat khau. Vui long kiem tra cac file dau vao.")
         return None
 
     return password_data
 
-
+# Ham run_selected_algorithm: chay thuat toan duoc nguoi dung chon.
 def run_selected_algorithm(choice, k, password_data):
-    # Map menu choice -> solver module.
+    # Anh xa lua chon menu -> module bo giai.
     algorithm_name, algorithm_module = ALGORITHMS[choice]
-    print(f"[*] Running {algorithm_name} with k = {k}...\n")
+    print(f"[*] Dang chay {algorithm_name} voi k = {k}...\n")
     return algorithm_module.solve_max_coverage(k, password_data)
 
-
+# Ham runAlgorithms: vong lap chinh de dieu huong menu thuat toan.
 def runAlgorithms(k, password_files):
-    # This loop keeps asking until the user exits or goes back.
+    # Vong lap nay se hoi cho den khi nguoi dung thoat hoac quay lai.
     password_data = load_password_data(password_files)
     if password_data is None:
         return
 
-    print(f"[+] Total candidate rules    : {len(rules.RULES)}")
-    print(f"[+] Fixed selected rules k   : {k}")
+    print(f"[+] Tong so luat ung vien    : {len(rules.RULES)}")
+    print(f"[+] So luat can chon co dinh k: {k}")
 
     while True:
         try:
             printMenuAlgorithms()
-            choice_raw = input("\n[+] Enter your choice: ").strip().lower()
+            choice_raw = input("\n[+] Nhap lua chon cua ban: ").strip().lower()
 
             if choice_raw == "e":
-                # Support typing "e" as a quick exit.
-                print("[*] Exiting...\n")
+                # Ho tro go "e" de thoat nhanh.
+                print("[*] Dang thoat...\n")
                 return "exit"
 
             choice = int(choice_raw)
 
             if choice == 0:
-                # Go back to the previous menu in __init__.py.
-                print("[*] Returning to the previous menu...\n")
+                # Quay lai menu truoc trong __init__.py.
+                print("[*] Quay lai menu truoc...\n")
                 return "back"
 
             if choice == -1:
-                print("[*] Exiting...\n")
+                print("[*] Dang thoat...\n")
                 return "exit"
 
             if choice not in ALGORITHMS:
-                print("[!] Invalid choice!")
+                print("[!] Lua chon khong hop le!")
                 continue
 
             run_selected_algorithm(choice, k, password_data)
 
         except ValueError:
-            print("[!] Please enter a valid number!")
+            print("[!] Vui long nhap mot so hop le!")
 
 
 if __name__ == "__main__":
