@@ -306,6 +306,7 @@ Chức năng:
 
 Các lựa chọn hiện có:
 
+- Brute Force
 - Greedy
 - Randomized Search
 - Hill Climbing
@@ -461,6 +462,7 @@ Sau đó `save_answer()` ghi ra file output.
 
 | Solver | Loại | Ý tưởng chính | Ghi chú |
 | --- | --- | --- | --- |
+| Brute Force | exact | Thử mọi tổ hợp `k` rules | Đơn giản nhưng bùng nổ tổ hợp |
 | Greedy | heuristic | Mỗi bước chọn rule có marginal gain lớn nhất | Nhanh, dễ hiểu |
 | Randomized Search | heuristic | Lấy mẫu nhiều tập `k` rules ngẫu nhiên | Phụ thuộc số mẫu |
 | Hill Climbing | heuristic | Duyệt swap để tăng coverage | Dễ kẹt local optimum |
@@ -470,7 +472,38 @@ Sau đó `save_answer()` ghi ra file output.
 | ILP + PuLP + CBC | exact | Mô hình 0-1 ILP | Dùng solver tối ưu |
 | Lagrangian Relaxation | heuristic | Relax ràng buộc bằng penalty | Hữu ích để minh họa tối ưu xấp xỉ |
 
-### 8.2. Greedy
+### 8.2. Brute Force
+
+Ý tưởng:
+
+- liệt kê mọi tổ hợp gồm đúng `k` rules
+- tính coverage của từng tổ hợp
+- giữ lại tổ hợp có coverage lớn nhất
+
+Đây là solver chính xác nhất trong dự án vì nó duyệt hết không gian nghiệm hợp lệ.
+
+Ví dụ trên dữ liệu hiện tại:
+
+- với `k = 3`, brute force trả về nghiệm tối ưu
+- nghiệm tối ưu hiện tại là:
+
+```text
+[2, 4, 6]
+= identity_medium, capitalize, append_single_digit
+```
+
+Tập này phủ được:
+
+```text
+296 / 500 password
+```
+
+Độ phức tạp xấp xỉ:
+
+- `O(C(n, k) * k * m)` nếu tính coverage cho mỗi tổ hợp từ đầu
+- với `n = 20`, brute force vẫn dùng được cho `k` nhỏ, nhưng sẽ tăng rất nhanh khi `k` lớn
+
+### 8.3. Greedy
 
 Ý tưởng:
 
@@ -506,7 +539,7 @@ Greedy trên bộ dữ liệu hiện tại cũng tìm ra đúng coverage này, c
 - dựng coverage: `O(m * n)`
 - phần chọn greedy: `O(k * m)` lần xét rule, cộng với chi phí union set
 
-### 8.3. Randomized Search
+### 8.4. Randomized Search
 
 Ý tưởng:
 
@@ -528,7 +561,7 @@ Ví dụ:
 
 - `O(m * n + T * k)` theo số lần lấy mẫu `T`, nếu coi thao tác union set là hằng số tương đối trên dữ liệu nhỏ
 
-### 8.4. Hill Climbing
+### 8.5. Hill Climbing
 
 Ý tưởng:
 
@@ -552,7 +585,7 @@ Ví dụ:
 - phần xây coverage: `O(m * n)`
 - phần local improvement: phụ thuộc số vòng lặp và số swap thử, thường xấp xỉ `O(I * k * m)`
 
-### 8.5. Local Search
+### 8.6. Local Search
 
 Ý tưởng:
 
@@ -575,7 +608,7 @@ Ví dụ:
 
 - `O(m * n + I * k * m)`
 
-### 8.6. Beam Search
+### 8.7. Beam Search
 
 Ý tưởng:
 
@@ -597,7 +630,7 @@ Ví dụ:
 
 - `O(m * n + k * beam_width * m)`
 
-### 8.7. Dynamic Programming
+### 8.8. Dynamic Programming
 
 Ý tưởng:
 
@@ -627,7 +660,7 @@ Ví dụ:
 - tốt hơn brute force trong nhiều trường hợp nhỏ
 - nhưng vẫn mang bản chất bùng nổ theo trạng thái
 
-### 8.8. ILP + PuLP + CBC
+### 8.9. ILP + PuLP + CBC
 
 Ý tưởng:
 
@@ -653,7 +686,7 @@ Ví dụ trực tiếp:
 - đúng với bài toán tối ưu toán học
 - trả về nghiệm tối ưu nếu CBC giải được đến tối ưu
 
-### 8.9. Lagrangian Relaxation
+### 8.10. Lagrangian Relaxation
 
 Ý tưởng:
 
