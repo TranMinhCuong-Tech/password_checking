@@ -87,12 +87,10 @@ Các test này dùng dataset nhỏ để so sánh giữa các solver.
 | A1 | brute force làm chuẩn | Brute Force vs Greedy | Greedy không được vượt brute force |
 | A2 | brute force làm chuẩn | Brute Force vs Randomized Search | Randomized Search không được vượt brute force |
 | A3 | brute force làm chuẩn | Brute Force vs Hill Climbing | Hill Climbing không được vượt brute force |
-| A4 | brute force làm chuẩn | Brute Force vs Local Search | Local Search không được vượt brute force |
-| A5 | brute force làm chuẩn | Brute Force vs Beam Search | Beam Search không được vượt brute force |
-| A6 | exact solver khớp nhau | Brute Force vs Dynamic Programming | kết quả coverage phải bằng nhau trên bài nhỏ |
-| A7 | exact solver khớp nhau | Brute Force vs ILP + PuLP + CBC | kết quả coverage phải bằng nhau trên bài nhỏ nếu CBC chạy đúng |
-| A8 | heuristic stability | nhiều lần chạy Randomized Search | coverage dao động trong phạm vi hợp lệ |
-| A9 | output format | mọi solver | file output được tạo đúng tên và đúng định dạng |
+| A4 | exact solver khớp nhau | Brute Force vs Dynamic Programming | kết quả coverage phải bằng nhau trên bài nhỏ |
+| A5 | exact solver khớp nhau | Brute Force vs ILP + PuLP + CBC | kết quả coverage phải bằng nhau trên bài nhỏ nếu CBC chạy đúng |
+| A6 | heuristic stability | nhiều lần chạy Randomized Search | coverage dao động trong phạm vi hợp lệ |
+| A7 | output format | mọi solver | file output được tạo đúng tên và đúng định dạng |
 
 ### 2.4. Property-based tests
 
@@ -142,8 +140,8 @@ Không cần chạy mọi algorithm với mọi `k` trên mọi dataset lớn.
 |---|---:|---|
 | T1 | 1 | Brute Force, Greedy, ILP + PuLP + CBC |
 | T1 | 2 | Brute Force, Greedy, ILP + PuLP + CBC |
-| T2 | 3 | Brute Force, Greedy, Randomized Search, Beam Search, ILP + PuLP + CBC |
-| T3 | 3 | Brute Force, Greedy, Hill Climbing, Local Search, Dynamic Programming |
+| T2 | 3 | Brute Force, Greedy, Randomized Search, ILP + PuLP + CBC |
+| T3 | 3 | Brute Force, Greedy, Hill Climbing, Dynamic Programming |
 | T4 | 1 | tất cả solver để kiểm tra xử lý biên |
 | T5 | 3 | tất cả solver exact + heuristic |
 | T6 | 1 | tất cả solver để kiểm tra coverage bằng 0 |

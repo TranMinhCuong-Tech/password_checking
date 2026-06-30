@@ -308,13 +308,10 @@ Các lựa chọn hiện có:
 
 - Brute Force
 - Greedy
-- Randomized Search
-- Hill Climbing
-- Local Search
-- Beam Search
 - Dynamic Programming
 - ILP + PuLP + CBC
-- Lagrangian Relaxation
+- Randomized Search
+- Hill Climbing
 
 ### 6.3. `rules.py`
 
@@ -464,13 +461,10 @@ Sau đó `save_answer()` ghi ra file output.
 | --- | --- | --- | --- |
 | Brute Force | exact | Thử mọi tổ hợp `k` rules | Đơn giản nhưng bùng nổ tổ hợp |
 | Greedy | heuristic | Mỗi bước chọn rule có marginal gain lớn nhất | Nhanh, dễ hiểu |
-| Randomized Search | heuristic | Lấy mẫu nhiều tập `k` rules ngẫu nhiên | Phụ thuộc số mẫu |
-| Hill Climbing | heuristic | Duyệt swap để tăng coverage | Dễ kẹt local optimum |
-| Local Search | heuristic | Swap first-improvement từ nghiệm ban đầu | Thực dụng cho bài nhỏ |
-| Beam Search | heuristic | Giữ lại `beam_width` trạng thái tốt nhất | Cân bằng giữa rộng và sâu |
 | Dynamic Programming | exact | Memoization theo trạng thái tìm kiếm | Chỉ hợp bài nhỏ |
 | ILP + PuLP + CBC | exact | Mô hình 0-1 ILP | Dùng solver tối ưu |
-| Lagrangian Relaxation | heuristic | Relax ràng buộc bằng penalty | Hữu ích để minh họa tối ưu xấp xỉ |
+| Randomized Search | heuristic | Lấy mẫu nhiều tập `k` rules ngẫu nhiên | Phụ thuộc số mẫu |
+| Hill Climbing | heuristic | Duyệt swap để tăng coverage | Dễ kẹt local optimum |
 
 ### 8.2. Brute Force
 
@@ -585,52 +579,7 @@ Ví dụ:
 - phần xây coverage: `O(m * n)`
 - phần local improvement: phụ thuộc số vòng lặp và số swap thử, thường xấp xỉ `O(I * k * m)`
 
-### 8.6. Local Search
-
-Ý tưởng:
-
-- bắt đầu từ một nghiệm ngẫu nhiên hợp lệ
-- duyệt lân cận theo kiểu first-improvement
-- gặp swap tốt thì nhận ngay
-
-Trong project:
-
-- nghiệm ban đầu được tạo bằng random sample `k` rules
-- `coverage_counts()` được dùng để đếm số password được phủ tại trạng thái hiện tại
-
-Ví dụ:
-
-- nếu nghiệm đầu là `[1, 7, 19]`
-- solver sẽ thử đổi từng rule này bằng một rule chưa chọn
-- khi tìm ra swap có gain dương thì chấp nhận ngay
-
-Độ phức tạp xấp xỉ:
-
-- `O(m * n + I * k * m)`
-
-### 8.7. Beam Search
-
-Ý tưởng:
-
-- mở rộng nhiều trạng thái trung gian
-- chỉ giữ lại `beam_width` trạng thái tốt nhất ở mỗi tầng
-
-Trong project:
-
-- beam bắt đầu từ trạng thái rỗng
-- ở mỗi độ sâu, solver thử thêm từng rule còn lại
-- sau đó sắp xếp theo coverage và cắt xuống `beam_width`
-
-Ví dụ:
-
-- nếu `beam_width = 5`
-- solver giữ 5 phương án trung gian tốt nhất thay vì chỉ 1 như greedy
-
-Độ phức tạp xấp xỉ:
-
-- `O(m * n + k * beam_width * m)`
-
-### 8.8. Dynamic Programming
+### 8.6. Dynamic Programming
 
 Ý tưởng:
 
@@ -660,7 +609,7 @@ Ví dụ:
 - tốt hơn brute force trong nhiều trường hợp nhỏ
 - nhưng vẫn mang bản chất bùng nổ theo trạng thái
 
-### 8.9. ILP + PuLP + CBC
+### 8.7. ILP + PuLP + CBC
 
 Ý tưởng:
 
@@ -685,29 +634,6 @@ Ví dụ trực tiếp:
 
 - đúng với bài toán tối ưu toán học
 - trả về nghiệm tối ưu nếu CBC giải được đến tối ưu
-
-### 8.10. Lagrangian Relaxation
-
-Ý tưởng:
-
-- nới lỏng ràng buộc số lượng rule bằng một penalty
-- điều chỉnh penalty qua nhiều vòng lặp
-- giữ nghiệm khả thi tốt nhất sau khi chiếu lại về miền ràng buộc
-
-Trong project:
-
-- solver xây một nghiệm “relaxed”
-- nếu chọn quá nhiều rule thì tăng penalty
-- nếu chọn quá ít rule thì giảm penalty
-
-Ví dụ:
-
-- khi `k = 3`, solver có thể tạm thời thử nghiệm một tập lớn hơn hoặc nhỏ hơn
-- sau đó dùng `complete_to_k()` hoặc `trim_to_k()` để đưa nghiệm về đúng kích thước `k`
-
-Đây là một heuristic tốt để minh họa tư duy tối ưu có phạt.
-
----
 
 ## 9. Ví dụ chạy thực tế với `k = 3`
 
@@ -788,11 +714,8 @@ Ví dụ tên file:
 - `output_greedy_k3.txt`
 - `output_randomized_k4.txt`
 - `output_hill_k4.txt`
-- `output_local_k4.txt`
-- `output_beam_k4.txt`
 - `output_dp_k7.txt`
 - `output_ILP_PuLP_CBC_k10.txt`
-- `output_lagrangian_k10.txt`
 
 ### 10.3. Nội dung file output
 

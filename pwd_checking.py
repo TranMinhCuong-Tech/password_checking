@@ -1,26 +1,20 @@
 try:
     from . import rules
     from .algorithms import Brute_Force as brute_force
-    from .algorithms import Beam_Search as beam_search
     from .algorithms import Dynamic_Programming as dynamic_programming
     from .algorithms import Greedy as greedy
     from .algorithms import Hill_Climbing as hill_climbing
     from .algorithms import ILP_PuLP_CBC as ilp_pulp_cbc
-    from .algorithms import Lagrangian_Relaxation as lagrangian_relaxation
-    from .algorithms import Local_Search as local_search
     from .algorithms import Randomized_Search as randomized_search
     from .coverage_problem import load_passwords
 except ImportError:
     import rules
     import algorithms.Brute_Force as brute_force
-    import algorithms.Beam_Search as beam_search
     import algorithms.Dynamic_Programming as dynamic_programming
     import algorithms.Greedy as greedy
     import algorithms.Hill_Climbing as hill_climbing
     from coverage_problem import load_passwords
     import algorithms.ILP_PuLP_CBC as ilp_pulp_cbc
-    import algorithms.Lagrangian_Relaxation as lagrangian_relaxation
-    import algorithms.Local_Search as local_search
     import algorithms.Randomized_Search as randomized_search
 
 
@@ -33,13 +27,10 @@ except ImportError:
 ALGORITHMS = {
     1: ("Brute Force", brute_force),
     2: ("Greedy", greedy),
-    3: ("Randomized Search", randomized_search),
-    4: ("Hill Climbing", hill_climbing),
-    5: ("Local Search", local_search),
-    6: ("Beam Search", beam_search),
-    7: ("Dynamic Programming", dynamic_programming),
-    8: ("ILP + PuLP + CBC", ilp_pulp_cbc),
-    9: ("Lagrangian Relaxation", lagrangian_relaxation),
+    3: ("Dynamic Programming", dynamic_programming),
+    4: ("ILP + PuLP + CBC", ilp_pulp_cbc),
+    5: ("Randomized Search", randomized_search),
+    6: ("Hill Climbing", hill_climbing),
 }
 
 # Ham printMenuAlgorithms: in menu lua chon cac thuat toan.
@@ -48,13 +39,10 @@ def printMenuAlgorithms():
     menu = """
     [1] Brute Force
     [2] Greedy
-    [3] Randomized Search
-    [4] Hill Climbing
-    [5] Local Search
-    [6] Beam Search
-    [7] Dynamic Programming
-    [8] ILP + PuLP + CBC
-    [9] Lagrangian Relaxation
+    [3] Dynamic Programming
+    [4] ILP + PuLP + CBC
+    [5] Randomized Search
+    [6] Hill Climbing
     [0] Return to the previous menu
     [-1] Exit
     """
