@@ -1,5 +1,4 @@
 import itertools
-import math
 import random
 import time
 import tracemalloc
@@ -246,75 +245,6 @@ def random_selection(rule_ids, k, rng):
         return list(rule_ids)
     return sorted(rng.sample(rule_ids, k))
 
-# Ham complete_to_k: bo sung luat de dat du dung k luat.
-def complete_to_k(rule_coverages, selected_rule_ids, rule_ids, target_k):
-    # Neu hien tai chon it hon k luat, tiep tuc them luat con lai tot nhat
-    # cho den khi dat k.
-    selected = list(selected_rule_ids)
-    selected_set = set(selected)
-    covered_indices = coverage_of_rules(rule_coverages, selected)
-    remaining = [rule_id for rule_id in rule_ids if rule_id not in selected_set]
-
-    while len(selected) < target_k and remaining:
-        best_rule_id, best_coverage, _ = best_rule_by_gain(rule_coverages, covered_indices, remaining)
-        if best_rule_id is None:
-            break
-        selected.append(best_rule_id)
-        selected_set.add(best_rule_id)
-        covered_indices = best_coverage
-        remaining.remove(best_rule_id)
-
-    return selected, covered_indices
-
-# Ham trim_to_k: cat bot luat de con dung k luat.
-def trim_to_k(rule_coverages, selected_rule_ids, target_k):
-    # Neu chon qua nhieu luat, loai bo luat lam giam phu it nhat.
-    selected = list(selected_rule_ids)
-    if len(selected) <= target_k:
-        return selected, coverage_of_rules(rule_coverages, selected)
-
-    while len(selected) > target_k:
-        current_coverage = coverage_of_rules(rule_coverages, selected)
-        worst_index = None
-        worst_loss = None
-
-        for index, rule_id in enumerate(selected):
-            reduced_selected = selected[:index] + selected[index + 1 :]
-            reduced_coverage = coverage_of_rules(rule_coverages, reduced_selected)
-            loss = len(current_coverage) - len(reduced_coverage)
-            if worst_loss is None or loss < worst_loss:
-                worst_loss = loss
-                worst_index = index
-
-        if worst_index is None:
-            break
-        selected.pop(worst_index)
-
-    return selected, coverage_of_rules(rule_coverages, selected)
-
-# Ham apply_swap_to_state: cap nhat trang thai sau mot phep doi 1-1.
-def apply_swap_to_state(current_counts, current_covered, removed_cover, added_cover):
-    # Cap nhat bo dem phu sau mot buoc doi 1-1.
-    for index in removed_cover:
-        count = current_counts[index] - 1
-        if count <= 0:
-            current_counts.pop(index, None)
-            current_covered.discard(index)
-        else:
-            current_counts[index] = count
-
-    for index in added_cover:
-        current_counts[index] += 1
-        current_covered.add(index)
-
-# Ham swap_gain: uoc luong loi ich cua mot phep doi luat.
-def swap_gain(current_counts, current_covered, removed_cover, added_cover):
-    # Uoc luong loi ich rong khi thay mot luat da chon bang mot luat khac.
-    # Gia tri duong co nghia la phep doi dang de thu.
-    added = sum(1 for index in added_cover if index not in current_covered)
-    lost = sum(1 for index in removed_cover if current_counts[index] == 1 and index not in added_cover)
-    return added - lost
-
 # Ham solve_bruteforce: giai chinh xac bang cach duyet tat ca to hop.
 def solve_bruteforce(passwords, k):
     """
@@ -413,150 +343,6 @@ def solve_randomized_search(passwords, k, iterations=None, seed=None):
 
     return result_payload("randomized search", k, best_rule_ids, passwords, best_coverage)
 
-# Ham solve_local_search: toi uu cuc bo bang phep doi va cai tien dau tien.
-def solve_local_search(passwords, k):
-    """
-    Local search co ban voi cac phep doi len dau tien tu mot diem bat dau ngau nhien.
-    """
-    # Local search = bat dau voi mot loi giai hop le, sau do thu cai tien no bang
-    # cach doi mot luat da chon voi mot luat chua chon.
-    rule_coverages, _, real_passwords = build_rule_coverages(passwords)
-    rule_ids = list(RULE_IDS)
-    k = clamp_k(k, len(rule_ids))
-
-    if k == 0 or not real_passwords:
-        return result_payload("local search", k, [], passwords, frozenset())
-
-    rng = random.Random(len(rule_ids) * 2003 + k * 131 + len(real_passwords))
-    current_rule_ids = random_selection(rule_ids, k, rng)
-    current_counts = coverage_counts(rule_coverages, current_rule_ids)
-    current_covered = set(current_counts.keys())
-
-    improved = True
-    while improved:
-        improved = False
-        current_score = len(current_covered)
-        selected_set = set(current_rule_ids)
-        remaining_rule_ids = [rule_id for rule_id in rule_ids if rule_id not in selected_set]
-        rng.shuffle(remaining_rule_ids)
-
-        for remove_index, removed_rule in enumerate(list(current_rule_ids)):
-            removed_cover = rule_coverages[removed_rule]
-            for added_rule in remaining_rule_ids:
-                added_cover = rule_coverages[added_rule]
-                gain = swap_gain(current_counts, current_covered, removed_cover, added_cover)
-                if gain > 0:
-                    current_rule_ids[remove_index] = added_rule
-                    current_counts = coverage_counts(rule_coverages, current_rule_ids)
-                    current_covered = set(current_counts.keys())
-                    improved = True
-                    break
-            if improved:
-                break
-
-    current_rule_ids = sorted(current_rule_ids)
-    return result_payload("local search", k, current_rule_ids, passwords, current_covered)
-
-# Ham solve_hill_climbing: toi uu cuc bo voi chien luoc cai tien tot nhat.
-def solve_hill_climbing(passwords, k):
-    """
-    Hill climbing voi cac buoc doi 1-1 tot nhat, khoi dau tu mot loi giai tham lam.
-    """
-    # Hill climbing giong local search, nhung bat dau tu loi giai tham lam
-    # va giu phep doi cai thien tot nhat trong moi vong.
-    rule_coverages, _, real_passwords = build_rule_coverages(passwords)
-    rule_ids = list(RULE_IDS)
-    k = clamp_k(k, len(rule_ids))
-
-    if k == 0 or not real_passwords:
-        return result_payload("hill climbing", k, [], passwords, frozenset())
-
-    current_rule_ids = solve_greedy(passwords, k)["selected_rule_ids"]
-    current_rule_ids = sorted(current_rule_ids)
-    current_counts = coverage_counts(rule_coverages, current_rule_ids)
-    current_covered = set(current_counts.keys())
-
-    improved = True
-    while improved:
-        improved = False
-        current_score = len(current_covered)
-        best_rule_ids = list(current_rule_ids)
-        best_counts = current_counts
-        best_covered = set(current_covered)
-        selected_set = set(current_rule_ids)
-        remaining_rule_ids = [rule_id for rule_id in rule_ids if rule_id not in selected_set]
-
-        for remove_index, removed_rule in enumerate(current_rule_ids):
-            removed_cover = rule_coverages[removed_rule]
-            for added_rule in remaining_rule_ids:
-                added_cover = rule_coverages[added_rule]
-                gain = swap_gain(current_counts, current_covered, removed_cover, added_cover)
-                if gain > 0:
-                    candidate_rule_ids = list(current_rule_ids)
-                    candidate_rule_ids[remove_index] = added_rule
-                    candidate_counts = coverage_counts(rule_coverages, candidate_rule_ids)
-                    candidate_covered = set(candidate_counts.keys())
-                    if len(candidate_covered) > current_score and len(candidate_covered) > len(best_covered):
-                        best_rule_ids = sorted(candidate_rule_ids)
-                        best_counts = candidate_counts
-                        best_covered = candidate_covered
-                        improved = True
-
-        current_rule_ids = best_rule_ids
-        current_counts = best_counts
-        current_covered = best_covered
-
-    return result_payload("hill climbing", k, current_rule_ids, passwords, current_covered)
-
-# Ham solve_beam_search: tim kiem theo beam search tren cac chon lua trung gian.
-def solve_beam_search(passwords, k, beam_width=None):
-    """
-    Beam search tren cac chon lua luat dang do.
-    """
-    # Beam search chi giu lai mot tap nho cac loi giai trung gian tot nhat.
-    # Cach nay kham pha nhieu hon tham lam, nhung van tranh duyet het toan bo.
-    rule_coverages, _, real_passwords = build_rule_coverages(passwords)
-    rule_ids = list(RULE_IDS)
-    rule_position = {rule_id: index for index, rule_id in enumerate(rule_ids)}
-    k = clamp_k(k, len(rule_ids))
-
-    if k == 0 or not real_passwords:
-        return result_payload("beam search", k, [], passwords, frozenset())
-
-    if beam_width is None:
-        beam_width = max(3, min(8, len(rule_ids)))
-
-    beam = [((), frozenset())]
-    for depth in range(k):
-        next_states = []
-        for selected_rule_ids, covered_indices in beam:
-            start_index = 0
-            if selected_rule_ids:
-                start_index = rule_position[selected_rule_ids[-1]] + 1
-
-            remaining_slots = k - depth - 1
-            upper_bound = len(rule_ids) - remaining_slots
-            for index in range(start_index, upper_bound):
-                rule_id = rule_ids[index]
-                new_selected_rule_ids = selected_rule_ids + (rule_id,)
-                new_covered_indices = covered_indices | rule_coverages[rule_id]
-                next_states.append((new_selected_rule_ids, frozenset(new_covered_indices)))
-
-        if not next_states:
-            break
-
-        next_states.sort(
-            key=lambda item: (len(item[1]), len(item[0]), item[0]),
-            reverse=True,
-        )
-        beam = next_states[:beam_width]
-
-    best_selected_rule_ids, best_covered_indices = max(
-        beam,
-        key=lambda item: (len(item[1]), len(item[0]), item[0]),
-    )
-    return result_payload("beam search", k, list(best_selected_rule_ids), passwords, best_covered_indices)
-
 # Ham solve_dp: giai chinh xac bang quy hoach dong va memoization.
 def solve_dp(passwords, k):
     """
@@ -597,6 +383,47 @@ def solve_dp(passwords, k):
     _, selected_rules = best_solution(0, k, frozenset())
     covered_indices = coverage_of_rules(rule_coverages, selected_rules)
     return result_payload("dynamic programming", k, list(selected_rules), passwords, covered_indices)
+
+# Ham solve_hill_climbing: toi uu cuc bo voi chien luoc cai tien tot nhat.
+def solve_hill_climbing(passwords, k):
+    """
+    Hill climbing voi cac buoc doi 1-1 tot nhat, khoi dau tu mot loi giai tham lam.
+    """
+    rule_coverages, _, real_passwords = build_rule_coverages(passwords)
+    rule_ids = list(RULE_IDS)
+    k = clamp_k(k, len(rule_ids))
+
+    if k == 0 or not real_passwords:
+        return result_payload("hill climbing", k, [], passwords, frozenset())
+
+    current_rule_ids = sorted(solve_greedy(passwords, k)["selected_rule_ids"])
+    current_covered = coverage_of_rules(rule_coverages, current_rule_ids)
+
+    improved = True
+    while improved:
+        improved = False
+        current_score = len(current_covered)
+        best_rule_ids = list(current_rule_ids)
+        best_covered = set(current_covered)
+
+        selected_set = set(current_rule_ids)
+        remaining_rule_ids = [rule_id for rule_id in rule_ids if rule_id not in selected_set]
+
+        for remove_index, removed_rule in enumerate(current_rule_ids):
+            for added_rule in remaining_rule_ids:
+                candidate_rule_ids = list(current_rule_ids)
+                candidate_rule_ids[remove_index] = added_rule
+                candidate_covered = coverage_of_rules(rule_coverages, candidate_rule_ids)
+                candidate_score = len(candidate_covered)
+                if candidate_score > current_score and candidate_score > len(best_covered):
+                    best_rule_ids = sorted(candidate_rule_ids)
+                    best_covered = candidate_covered
+                    improved = True
+
+        current_rule_ids = best_rule_ids
+        current_covered = set(best_covered)
+
+    return result_payload("hill climbing", k, current_rule_ids, passwords, current_covered)
 
 # Ham solve_ilp_pulp_cbc: giai Maximum Coverage bang mo hinh ILP.
 def solve_ilp_pulp_cbc(passwords, k):
@@ -659,94 +486,3 @@ def solve_ilp_pulp_cbc(passwords, k):
         covered_indices,
     )
 
-# Ham solve_lagrangian_relaxation: giai gan dung bang lagrangian relaxation.
-def solve_lagrangian_relaxation(passwords, k, iterations=None):
-    """
-    Lagranian relaxation voi cap nhat phat trien theo kieu subgradient don gian.
-    Day la mot heuristic thuc te cho du an.
-    """
-    # Ta lam lon rang buoc "chon dung k luat" bang cach them mot ham phat.
-    # Sau do cap nhat ham phat lap di lap lai de dua loi giai gan k hon.
-    rule_coverages, _, real_passwords = build_rule_coverages(passwords)
-    rule_ids = list(RULE_IDS)
-    k = clamp_k(k, len(rule_ids))
-
-    if k == 0 or not real_passwords:
-        return result_payload("lagrangian relaxation", k, [], passwords, frozenset())
-
-    if iterations is None:
-        iterations = max(12, len(rule_ids) * 2)
-
-    best_rule_ids = []
-    best_coverage = frozenset()
-    best_count = -1
-
-    lambda_penalty = 0.0
-    step = max(0.5, math.sqrt(len(rule_ids)) / max(1, k))
-
-    for _ in range(iterations):
-        selected_rule_ids = []
-        remaining_rule_ids = list(rule_ids)
-        covered_indices = set()
-
-        while remaining_rule_ids:
-            # Thu tung luat con lai va giu luat co loi ich dieu chinh tot nhat.
-            best_rule_id = None
-            best_adjusted_gain = float("-inf")
-            best_gain = -1
-            best_candidate_coverage = frozenset(covered_indices)
-
-            for rule_id in remaining_rule_ids:
-                candidate_coverage = covered_indices | rule_coverages[rule_id]
-                gain = len(candidate_coverage) - len(covered_indices)
-                adjusted_gain = gain - lambda_penalty
-                if adjusted_gain > best_adjusted_gain or (
-                    adjusted_gain == best_adjusted_gain and gain > best_gain
-                ):
-                    best_adjusted_gain = adjusted_gain
-                    best_gain = gain
-                    best_rule_id = rule_id
-                    best_candidate_coverage = candidate_coverage
-
-            if best_rule_id is None or best_adjusted_gain <= 0:
-                break
-
-            selected_rule_ids.append(best_rule_id)
-            remaining_rule_ids.remove(best_rule_id)
-            covered_indices = set(best_candidate_coverage)
-
-        relaxed_count = len(selected_rule_ids)
-        # Neu chon qua nhieu luat, tang muc phat.
-        # Neu chon qua it, giam muc phat.
-        lambda_penalty = max(0.0, lambda_penalty + step * (relaxed_count - k))
-
-        feasible_rule_ids = list(selected_rule_ids)
-        feasible_coverage = frozenset(covered_indices)
-        if len(feasible_rule_ids) < k:
-            feasible_rule_ids, feasible_coverage = complete_to_k(
-                rule_coverages,
-                feasible_rule_ids,
-                rule_ids,
-                k,
-            )
-        elif len(feasible_rule_ids) > k:
-            feasible_rule_ids, feasible_coverage = trim_to_k(rule_coverages, feasible_rule_ids, k)
-        else:
-            feasible_coverage = frozenset(covered_indices)
-
-        feasible_count = len(feasible_coverage)
-        if feasible_count > best_count:
-            best_rule_ids = list(feasible_rule_ids)
-            best_coverage = frozenset(feasible_coverage)
-            best_count = feasible_count
-
-    if len(best_rule_ids) < k:
-        best_rule_ids, best_coverage = complete_to_k(rule_coverages, best_rule_ids, rule_ids, k)
-
-    return result_payload(
-        "lagrangian relaxation",
-        k,
-        sorted(best_rule_ids),
-        passwords,
-        best_coverage,
-    )
